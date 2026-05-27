@@ -117,7 +117,7 @@ function App() {
         </div>
 
         <div className="flex items-center justify-end gap-3">
-          {selectedRadio && <AudioPlayer selectedRadio={selectedRadio} />}
+          <AudioPlayer selectedRadio={selectedRadio} isTuning={previewRadio !== null} />
           <button
             onClick={() => setTheme(t => t === "retro" ? "" : "retro")}
             className="border-none cursor-pointer bg-panel-light text-fg rounded-full text-[10px] font-bold tracking-wider uppercase flex-shrink-0"

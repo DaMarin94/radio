@@ -4,23 +4,113 @@ import styles from "./AudioPlayer.module.css";
 
 type Props = {
   selectedRadio: RadioStation | null;
+  isTuning: boolean;
 };
 
-function AudioPlayer({ selectedRadio }: Props) {
+function AudioPlayer({ selectedRadio, isTuning }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const staticSourceRef = useRef<AudioBufferSourceNode | null>(null);
+  const staticGainRef = useRef<GainNode | null>(null);
 
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioReady, setAudioReady] = useState(false);
 
   const [volume, setVolume] = useState(() => {
     const saved = localStorage.getItem("player-volume");
     return saved ? Number(saved) : 1;
   });
-
   const [isMuted, setIsMuted] = useState(false);
+
+  const volumeRef = useRef(volume);
+  volumeRef.current = volume;
+
+  const shouldPlayStatic = !isMuted && (isTuning || (selectedRadio !== null && !audioReady));
+
+  // Mute the audio stream while static is playing
+  useEffect(() => {
+    if (!audioRef.current) return;
+    audioRef.current.muted = isMuted || shouldPlayStatic;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMuted, shouldPlayStatic]);
+
+  // Start/stop white noise static
+  useEffect(() => {
+    if (!shouldPlayStatic) return;
+
+    if (!audioCtxRef.current) {
+      try {
+        audioCtxRef.current = new AudioContext();
+      } catch {
+        return;
+      }
+    }
+    const ctx = audioCtxRef.current;
+    if (ctx.state === "suspended") ctx.resume();
+
+    const bufferSize = Math.floor(ctx.sampleRate * 2);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+
+    const gain = ctx.createGain();
+    gain.gain.value = volumeRef.current * 0.08;
+
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+
+    staticSourceRef.current = source;
+    staticGainRef.current = gain;
+
+    return () => {
+      try { source.stop(); } catch { /* already stopped */ }
+      source.disconnect();
+      staticSourceRef.current = null;
+      staticGainRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldPlayStatic]);
+
+  // Update static gain when volume changes
+  useEffect(() => {
+    if (staticGainRef.current) {
+      staticGainRef.current.gain.value = volume * 0.08;
+    }
+  }, [volume]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume]);
+
+  useEffect(() => {
+    localStorage.setItem("player-volume", String(volume));
+  }, [volume]);
+
+  useEffect(() => {
+    setAudioReady(false);
+    if (!audioRef.current || !selectedRadio) return;
+
+    const audio = audioRef.current;
+    const handlePlaying = () => setAudioReady(true);
+    audio.addEventListener("playing", handlePlaying);
+
+    audio.src = selectedRadio.streamUrl;
+    audio.play().then(() => setIsPlaying(true)).catch(console.error);
+
+    return () => {
+      audio.removeEventListener("playing", handlePlaying);
+    };
+  }, [selectedRadio]);
 
   async function togglePlayback() {
     if (!audioRef.current) return;
-
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -33,25 +123,6 @@ function AudioPlayer({ selectedRadio }: Props) {
       }
     }
   }
-
-  useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume;
-  }, [volume]);
-
-  useEffect(() => {
-    localStorage.setItem("player-volume", String(volume));
-  }, [volume]);
-
-  useEffect(() => {
-    if (!audioRef.current) return;
-    audioRef.current.muted = isMuted;
-  }, [isMuted]);
-
-  useEffect(() => {
-    if (!audioRef.current || !selectedRadio) return;
-    audioRef.current.src = selectedRadio.streamUrl;
-    audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
-  }, [selectedRadio]);
 
   return (
     <div className="flex flex-row-reverse items-center gap-3">
