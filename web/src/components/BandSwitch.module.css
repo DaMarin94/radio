@@ -1,0 +1,46 @@
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 120px;
+  height: 44px;
+  background: var(--panel);
+  border-radius: 999px;
+  padding: 4px;
+  border: none;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.thumb {
+  position: absolute;
+  left: 4px;
+  width: 56px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--panel-light);
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+
+.root[data-state="checked"] .thumb {
+  transform: translateX(56px);
+}
+
+.label {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.active  { color: var(--text); }
+.inactive { color: var(--text-secondary); }

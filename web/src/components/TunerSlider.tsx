@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import styles from "./TunerSlider.module.css";
 
 const SCALES = {
   AM: { min: 530, max: 1700, minorStep: 100, majorStep: 200 },
@@ -35,16 +36,16 @@ function TunerSlider({ band, value, onChange, onRelease }: Props) {
   const { min, max } = SCALES[band];
 
   return (
-    <div className="tuner-slider">
-      <div className={`tuner-scale tuner-scale--fm${band === "FM" ? " tuner-scale--active" : " tuner-scale--inactive"}`}>
+    <div className={styles.slider}>
+      <div className={`${styles.scale} ${styles.scaleFm} ${band === "FM" ? styles.scaleActive : styles.scaleInactive}`}>
         {fmTicks.map((tick) => (
           <div
             key={tick.value}
-            className={`tuner-tick${tick.isMajor ? " tuner-tick--major" : " tuner-tick--minor"}`}
+            className={`${styles.tick} ${tick.isMajor ? styles.tickMajor : styles.tickMinor}`}
             style={{ left: `${tick.position}%` }}
           >
-            {tick.isMajor && <span className="tuner-tick-label">{tick.value}</span>}
-            <div className="tuner-tick-line" />
+            {tick.isMajor && <span className={styles.tickLabel}>{tick.value}</span>}
+            <div className={styles.tickLine} />
           </div>
         ))}
       </div>
@@ -58,18 +59,18 @@ function TunerSlider({ band, value, onChange, onRelease }: Props) {
         onChange={(e) => onChange(Number(e.target.value))}
         onMouseUp={(e) => onRelease(Number(e.currentTarget.value))}
         onTouchEnd={(e) => onRelease(Number(e.currentTarget.value))}
-        className="tuner-slider-input"
+        className={styles.input}
       />
 
-      <div className={`tuner-scale tuner-scale--am${band === "AM" ? " tuner-scale--active" : " tuner-scale--inactive"}`}>
+      <div className={`${styles.scale} ${styles.scaleAm} ${band === "AM" ? styles.scaleActive : styles.scaleInactive}`}>
         {amTicks.map((tick) => (
           <div
             key={tick.value}
-            className={`tuner-tick${tick.isMajor ? " tuner-tick--major" : " tuner-tick--minor"}`}
+            className={`${styles.tick} ${tick.isMajor ? styles.tickMajor : styles.tickMinor}`}
             style={{ left: `${tick.position}%` }}
           >
-            <div className="tuner-tick-line" />
-            {tick.isMajor && <span className="tuner-tick-label">{tick.value}</span>}
+            <div className={styles.tickLine} />
+            {tick.isMajor && <span className={styles.tickLabel}>{tick.value}</span>}
           </div>
         ))}
       </div>
