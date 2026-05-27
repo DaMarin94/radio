@@ -8,10 +8,9 @@ import TunerSlider from "./components/TunerSlider";
 import AudioPlayer from "./components/AudioPlayer";
 import BandSwitch from "./components/BandSwitch";
 import { getSavedFrequency } from "./helpers/getSavedFrequency";
-import { resolveStationByTuning, getUserLocation } from "./helpers/tuning";
+import { resolveStationByTuning } from "./helpers/tuning";
 
 type BandFilter = "AM" | "FM";
-type UserLocation = { lat: number; lng: number };
 
 function App() {
   const [radios, setRadios] = useState<RadioStation[]>([]);
@@ -41,11 +40,6 @@ function App() {
   const [previewRadio, setPreviewRadio] =
     useState<RadioStation | null>(null);
 
-  const [nearbyMode, setNearbyMode] = useState(false);
-  const [nearbyLoading, setNearbyLoading] = useState(false);
-  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
-  const [detectedCity, setDetectedCity] = useState<string | null>(null);
-
   useEffect(() => {
     localStorage.setItem(
       `frequency-${bandFilter}`,
@@ -53,19 +47,10 @@ function App() {
     );
   }, [frequency]);
 
-  async function loadRadios(location?: UserLocation | null) {
+  async function loadRadios() {
     try {
-      if (location) {
-        const response = await api.get("/radios/by-location", {
-          params: { lat: location.lat, lng: location.lng },
-        });
-        setRadios(response.data.stations);
-        setDetectedCity(response.data.location.city);
-      } else {
-        const response = await api.get("/radios/buenos-aires");
-        setRadios(response.data);
-        setDetectedCity(null);
-      }
+      const response = await api.get("/radios/buenos-aires");
+      setRadios(response.data);
     } catch (error) {
       console.error(error);
     }
@@ -75,25 +60,6 @@ function App() {
     loadRadios();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  async function toggleNearby() {
-    if (nearbyMode) {
-      setNearbyMode(false);
-      setUserLocation(null);
-      loadRadios(null);
-      return;
-    }
-
-    setNearbyLoading(true);
-    const location = await getUserLocation();
-    setNearbyLoading(false);
-
-    if (!location) return;
-
-    setNearbyMode(true);
-    setUserLocation(location);
-    loadRadios(location);
-  }
 
   function handleFrequencyChange(value: number) {
     const closest = resolveStationByTuning(
@@ -149,9 +115,6 @@ function App() {
       const savedRadio = radios.find((radio) => radio.id === savedRadioId);
       if (savedRadio) setSelectedRadio(savedRadio);
     }
-
-    // no re-fetch needed: by-location already returned all local stations,
-    // band filtering happens client-side via filteredRadios
   }
 
   return (
