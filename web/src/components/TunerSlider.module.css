@@ -1,0 +1,88 @@
+.slider {
+  padding: 16px 0;
+}
+
+@media (min-width: 768px) {
+  .slider {
+    padding-inline: 10%;
+  }
+}
+
+/* Scales */
+
+.scale {
+  position: relative;
+  height: 28px;
+  margin: 0 3px;
+}
+
+.scaleFm { margin-bottom: 4px; }
+.scaleAm { margin-top: 4px; }
+
+.tick {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.scaleFm .tick { bottom: 0; }
+.scaleAm .tick { top: 0; }
+
+.tickLabel {
+  font-size: 10px;
+  color: var(--text);
+  line-height: 1;
+  user-select: none;
+}
+
+.tickLine { width: 1px; }
+
+.tickMajor .tickLine { height: 8px; background: var(--text); }
+.tickMinor .tickLine { height: 4px; background: var(--text); }
+
+.scaleActive .tickLabel             { opacity: 0.65; }
+.scaleActive .tickMajor .tickLine   { opacity: 0.5; }
+.scaleActive .tickMinor .tickLine   { opacity: 0.2; }
+
+.scaleInactive .tickLabel           { opacity: 0.2; }
+.scaleInactive .tickMajor .tickLine { opacity: 0.15; }
+.scaleInactive .tickMinor .tickLine { opacity: 0.07; }
+
+/* Range input */
+
+.input {
+  width: 100%;
+  appearance: none;
+  height: 10px;
+  border-radius: var(--track-radius);
+  outline: none;
+  cursor: pointer;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--track-hi) 0px,
+    var(--track-hi) var(--track-hi-w),
+    var(--track-lo) var(--track-hi-w),
+    var(--track-lo) calc(var(--track-hi-w) + var(--track-lo-w))
+  );
+}
+
+.input::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 40px;
+  background: var(--needle);
+  border-radius: 1px;
+  cursor: pointer;
+}
+
+.input::-moz-range-thumb {
+  width: 10px;
+  height: 40px;
+  background: var(--needle);
+  border-radius: 1px;
+  cursor: pointer;
+  border: none;
+}

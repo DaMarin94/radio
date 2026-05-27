@@ -1,49 +1,26 @@
+import * as Switch from "@radix-ui/react-switch";
+import styles from "./BandSwitch.module.css";
+
 type Props = {
   value: "AM" | "FM";
-
   onChange: (value: "AM" | "FM") => void;
 };
 
-function BandSwitch({
-  value,
-  onChange,
-}: Props) {
-  function toggle() {
-    onChange(value === "AM" ? "FM" : "AM");
-  }
-
+function BandSwitch({ value, onChange }: Props) {
   return (
-    <div className="band-switch">
-      <div
-        onClick={toggle}
-        className="band-switch-track"
-      >
-        <div
-          className="band-switch-thumb"
-          style={{
-            left: value === "AM" ? 4 : 60,
-          }}
-        />
-
-        <div
-          className={`
-            band-switch-label
-            ${value === "AM" ? "active" : "inactive"}
-          `}
-        >
-          AM
-        </div>
-
-        <div
-          className={`
-            band-switch-label
-            ${value === "FM" ? "active" : "inactive"}
-          `}
-        >
-          FM
-        </div>
-      </div>
-    </div>
+    <Switch.Root
+      checked={value === "FM"}
+      onCheckedChange={(checked) => onChange(checked ? "FM" : "AM")}
+      className={styles.root}
+    >
+      <span className={`${styles.label} ${value === "AM" ? styles.active : styles.inactive}`}>
+        AM
+      </span>
+      <Switch.Thumb className={styles.thumb} />
+      <span className={`${styles.label} ${value === "FM" ? styles.active : styles.inactive}`}>
+        FM
+      </span>
+    </Switch.Root>
   );
 }
 
