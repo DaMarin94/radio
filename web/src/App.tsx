@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { api } from "./services/api";
 
@@ -39,6 +39,8 @@ function App() {
   const [previewRadio, setPreviewRadio] =
     useState<RadioStation | null>(null);
 
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     localStorage.setItem(
       `frequency-${bandFilter}`,
@@ -76,6 +78,12 @@ function App() {
 
     setPreviewRadio(closest);
     setFrequency(value);
+
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(() => {
+      if (closest) setSelectedRadio(closest);
+    }, 300);
   }
 
   const filteredRadios = useMemo(() => {
@@ -96,6 +104,8 @@ function App() {
   }, [selectedRadio, bandFilter]);
 
   function handleFrequencyRelease(value: number) {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
     const station = resolveStationByTuning(value, filteredRadios);
 
     if (!station) return;
@@ -127,6 +137,10 @@ function App() {
           onChange={changeBand}
         />
 
+        <div className="app-header-station">
+          {selectedRadio?.name}
+        </div>
+
         {selectedRadio && (
           <AudioPlayer selectedRadio={selectedRadio} />
         )}
@@ -148,8 +162,7 @@ function App() {
       </div>
 
       <TunerSlider
-        min={bandFilter === "AM" ? 530 : 76}
-        max={bandFilter === "AM" ? 1700 : 108}
+        band={bandFilter}
         value={frequency}
         onChange={handleFrequencyChange}
         onRelease={handleFrequencyRelease}

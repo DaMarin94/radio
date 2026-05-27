@@ -71,10 +71,21 @@ body {
 }
 
 .app-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   margin-bottom: 20px;
+}
+
+.app-header-station {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 12px;
 }
 
 .audio-player {
@@ -156,13 +167,66 @@ body {
   border: none;
 }
 
-.tuner-slider-values {
-  margin-top: 8px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 12px;
-  opacity: 0.7;
+.tuner-scale {
+  position: relative;
+  height: 28px;
+  margin: 0 3px;
 }
+
+.tuner-scale--fm {
+  margin-bottom: 4px;
+}
+
+.tuner-scale--am {
+  margin-top: 4px;
+}
+
+.tuner-tick {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.tuner-scale--fm .tuner-tick {
+  bottom: 0;
+}
+
+.tuner-scale--am .tuner-tick {
+  top: 0;
+}
+
+
+.tuner-tick-label {
+  font-size: 10px;
+  color: var(--text);
+  line-height: 1;
+  user-select: none;
+}
+
+.tuner-tick-line {
+  width: 1px;
+}
+
+.tuner-tick--major .tuner-tick-line {
+  height: 8px;
+  background: var(--text);
+}
+
+.tuner-tick--minor .tuner-tick-line {
+  height: 4px;
+  background: var(--text);
+}
+
+.tuner-scale--active .tuner-tick-label       { opacity: 0.65; }
+.tuner-scale--active .tuner-tick--major .tuner-tick-line { opacity: 0.5; }
+.tuner-scale--active .tuner-tick--minor .tuner-tick-line { opacity: 0.2; }
+
+.tuner-scale--inactive .tuner-tick-label       { opacity: 0.2; }
+.tuner-scale--inactive .tuner-tick--major .tuner-tick-line { opacity: 0.15; }
+.tuner-scale--inactive .tuner-tick--minor .tuner-tick-line { opacity: 0.07; }
 
 .band-switch {
   display: flex;
