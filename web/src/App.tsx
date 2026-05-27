@@ -60,6 +60,17 @@ function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (radios.length === 0) return;
+
+    const savedRadioId = localStorage.getItem(`selectedRadio-${bandFilter}`);
+    if (!savedRadioId) return;
+
+    const savedRadio = radios.find((radio) => radio.id === savedRadioId);
+    if (savedRadio) setSelectedRadio(savedRadio);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [radios]);
+
   function handleFrequencyChange(value: number) {
     const closest = resolveStationByTuning(value, filteredRadios);
 
@@ -110,16 +121,16 @@ function App() {
 
   return (
     <div className="app">
-      <BandSwitch
-        value={bandFilter}
-        onChange={changeBand}
-      />
+      <div className="app-header">
+        <BandSwitch
+          value={bandFilter}
+          onChange={changeBand}
+        />
 
-      {selectedRadio && (
-        <div className="player-container">
+        {selectedRadio && (
           <AudioPlayer selectedRadio={selectedRadio} />
-        </div>
-      )}
+        )}
+      </div>
 
       <div className={`station-display${previewRadio ? " station-display--preview" : ""}`}>
         {(previewRadio ?? selectedRadio) && (
