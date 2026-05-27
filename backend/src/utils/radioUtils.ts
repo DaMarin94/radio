@@ -3,7 +3,7 @@ export function extractFrequency(
 ): string | null {
   const match = name.match(/(\d{2,4}(?:\.\d)?)/);
 
-  return match ? match[1] : null;
+  return match ? match[1]! : null;
 }
 
 export function detectBand(
