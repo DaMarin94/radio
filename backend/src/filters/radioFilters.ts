@@ -9,6 +9,11 @@ export function isBuenosAiresStation(
 ): boolean {
   const state = station.state?.toLowerCase() || "";
 
+  // Include stations with no state — Radio Browser often lacks subdivision
+  // data for valid BA stations (e.g. Blue 100.7, Aspen). Since we already
+  // query by countrycode=AR, the risk of including non-BA stations is low.
+  if (!state) return true;
+
   return state.includes("buenos aires");
 }
 
