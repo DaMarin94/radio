@@ -23,7 +23,7 @@ function App() {
 
       return getSavedFrequency(savedBand);
     });
-  const [tuningMode, setTuningMode] = useState<TuningMode>("SNAP");
+  const [tuningMode, ] = useState<TuningMode>("SNAP");
   const [selectedRadio, setSelectedRadio] =
     useState<RadioStation | null>(null);
 
