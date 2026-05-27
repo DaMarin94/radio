@@ -1,0 +1,68 @@
+.drum {
+  position: relative;
+  width: 160px;
+  height: calc(var(--item-h, 44px) * 5);
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  background: var(--panel);
+  border-radius: 6px;
+
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 22%,
+    black 78%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 22%,
+    black 78%,
+    transparent 100%
+  );
+}
+
+.drum:active {
+  cursor: grabbing;
+}
+
+.item {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--item-h, 44px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  transform-origin: center center;
+  pointer-events: none;
+}
+
+.itemCenter {
+  color: var(--needle);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.centerBorderTop,
+.centerBorderBottom {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background: var(--text-secondary);
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.centerBorderTop    { top: calc(50% - var(--item-h, 44px) / 2); }
+.centerBorderBottom { top: calc(50% + var(--item-h, 44px) / 2 - 1px); }
