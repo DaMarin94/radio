@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api } from "./services/api";
 
-import type { RadioStation, TuningMode } from "./types/radioStation";
+import type { RadioStation } from "./types/radioStation";
 
 import TunerSlider from "./components/TunerSlider";
 import AudioPlayer from "./components/AudioPlayer";
@@ -23,7 +23,6 @@ function App() {
 
       return getSavedFrequency(savedBand);
     });
-  const [tuningMode, ] = useState<TuningMode>("SNAP");
   const [selectedRadio, setSelectedRadio] =
     useState<RadioStation | null>(null);
 
@@ -62,11 +61,7 @@ function App() {
   }, []);
 
   function handleFrequencyChange(value: number) {
-    const closest = resolveStationByTuning(
-      value,
-      filteredRadios,
-      tuningMode
-    );
+    const closest = resolveStationByTuning(value, filteredRadios);
 
     setPreviewRadio(closest);
     setFrequency(value);
@@ -90,11 +85,7 @@ function App() {
   }, [selectedRadio, bandFilter]);
 
   function handleFrequencyRelease(value: number) {
-    const station = resolveStationByTuning(
-      value,
-      filteredRadios,
-      tuningMode
-    );
+    const station = resolveStationByTuning(value, filteredRadios);
 
     if (!station) return;
 

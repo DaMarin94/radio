@@ -23,6 +23,13 @@ export type RadioStation = {
   clickcount: number;
 };
 
+export type ReverseGeocodeResult = {
+  city: string;
+  state: string;
+  country: string;
+  countrycode: string; // uppercase ISO 3166-1 alpha-2, e.g. "AR"
+};
+
 export type RadioBrowserStation = {
   stationuuid: string;
   name: string;

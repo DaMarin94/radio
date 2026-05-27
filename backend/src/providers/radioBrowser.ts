@@ -5,15 +5,7 @@ import axios from "axios";
 const BASE_URL = "https://all.api.radio-browser.info/json";
 
 export async function getArgentinaStations() {
-  const response = await axios.get(`${BASE_URL}/stations/search`, {
-    params: {
-      countrycode: "AR",
-      hidebroken: "true",
-      limit: 1000,
-    },
-  });
-
-  return response.data;
+  return getStationsByCountry("AR");
 }
 
 export async function getStationsByCountry(countrycode: string) {

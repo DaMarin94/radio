@@ -1,6 +1,7 @@
 import {
   RadioBrowserStation,
   RadioStation,
+  ReverseGeocodeResult,
 } from "../models/radioStation";
 import { getDistanceKm } from "../utils/radioUtils";
 
@@ -20,10 +21,7 @@ export function isBuenosAiresStation(
 export function hasValidStream(
   station: RadioBrowserStation
 ): boolean {
-  return Boolean(
-    station.name &&
-      station.url_resolved
-  );
+  return Boolean(station.name && station.url_resolved);
 }
 
 export function removeDuplicateStations(
@@ -31,12 +29,7 @@ export function removeDuplicateStations(
   index: number,
   self: RadioStation[]
 ): boolean {
-  return (
-    index ===
-    self.findIndex(
-      (s) => s.name === station.name
-    )
-  );
+  return index === self.findIndex((s) => s.name === station.name);
 }
 
 export function filterNearby(
@@ -57,4 +50,29 @@ export function filterNearby(
 
     return distance <= radiusKm;
   });
+}
+
+export function stationMatchesLocation(
+  station: RadioStation,
+  location: ReverseGeocodeResult
+): boolean {
+  if (!station.state) return false;
+
+  const ss = normalize(station.state);
+  const city = normalize(location.city);
+  const state = normalize(location.state);
+
+  return (
+    ss.includes(city) ||
+    city.includes(ss) ||
+    ss.includes(state) ||
+    state.includes(ss)
+  );
+}
+
+function normalize(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
 }

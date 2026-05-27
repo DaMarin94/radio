@@ -1,13 +1,7 @@
 import axios from "axios";
+import { ReverseGeocodeResult } from "../models/radioStation";
 
 const BASE_URL = "https://nominatim.openstreetmap.org";
-
-export type ReverseGeocodeResult = {
-  city: string;
-  state: string;
-  country: string;
-  countrycode: string; // uppercase ISO 3166-1 alpha-2, e.g. "AR"
-};
 
 export async function reverseGeocode(
   lat: number,

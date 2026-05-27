@@ -1,59 +1,16 @@
 import type { RadioStation } from "../types/radioStation";
 
-export type TuningMode = "CONTINUOUS" | "SNAP";
-
 export function resolveStationByTuning(
   value: number,
-  stations: RadioStation[],
-  mode: TuningMode
+  stations: RadioStation[]
 ): RadioStation | null {
-  const withFreq = stations.filter(
-    (s) => s.frequency
-  );
+  const withFreq = stations.filter((s) => s.frequency);
 
   if (withFreq.length === 0) return null;
 
-  if (mode === "CONTINUOUS") {
-    return withFreq.reduce((closest, current) => {
-      const v = parseFloat(current.frequency!);
-      const c = parseFloat(closest.frequency!);
-
-      return Math.abs(v - value) <
-        Math.abs(c - value)
-        ? current
-        : closest;
-    });
-  }
-
-  // SNAP MODE
   return withFreq.reduce((closest, current) => {
     const v = parseFloat(current.frequency!);
     const c = parseFloat(closest.frequency!);
-
-    return Math.abs(v - value) <
-      Math.abs(c - value)
-      ? current
-      : closest;
-  });
-}
-
-
-export async function getUserLocation(): Promise<{ lat: number; lng: number } | null> {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) {
-      resolve(null);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        resolve({
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        });
-      },
-      () => resolve(null),
-      { timeout: 5000 }
-    );
+    return Math.abs(v - value) < Math.abs(c - value) ? current : closest;
   });
 }
