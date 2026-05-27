@@ -16,6 +16,11 @@ export type RadioStation = {
 
   frequency?: string | null;
   band?: "AM" | "FM" | null;
+
+  lat?: number | null;
+  lng?: number | null;
+
+  clickcount?: number;
 };
 
 export type TuningMode = "CONTINUOUS" | "SNAP";

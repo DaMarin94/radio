@@ -173,3 +173,37 @@ body {
 .band-switch-label.inactive {
   color: var(--text-secondary);
 }
+
+.nearby-btn {
+  padding: 8px 20px;
+  border: none;
+  border-radius: var(--radius-round);
+  background: var(--panel);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  margin-bottom: 20px;
+
+  &:hover:not(:disabled) {
+    background: var(--panel-light);
+    color: var(--text);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.nearby-btn--active {
+  background: var(--panel-light);
+  color: var(--text);
+
+  &::before {
+    content: '● ';
+    font-size: 8px;
+    vertical-align: middle;
+  }
+}

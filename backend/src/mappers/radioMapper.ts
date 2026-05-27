@@ -37,7 +37,11 @@ export function mapRadioStation(
     bitrate: station.bitrate ?? null,
 
     frequency: extractFrequency(station.name),
-
     band: detectBand(station.name),
+
+    lat: station.geo_lat ? parseFloat(station.geo_lat) : null,
+    lng: station.geo_long ? parseFloat(station.geo_long) : null,
+
+    clickcount: station.clickcount ?? 0,
   };
 }

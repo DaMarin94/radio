@@ -2,6 +2,7 @@ import {
   RadioBrowserStation,
   RadioStation,
 } from "../models/radioStation";
+import { getDistanceKm } from "../utils/radioUtils";
 
 export function isBuenosAiresStation(
   station: RadioBrowserStation
@@ -31,4 +32,24 @@ export function removeDuplicateStations(
       (s) => s.name === station.name
     )
   );
+}
+
+export function filterNearby(
+  stations: RadioStation[],
+  userLat: number,
+  userLng: number,
+  radiusKm: number
+): RadioStation[] {
+  return stations.filter((station) => {
+    if (!station.lat || !station.lng) return false;
+
+    const distance = getDistanceKm(
+      userLat,
+      userLng,
+      station.lat,
+      station.lng
+    );
+
+    return distance <= radiusKm;
+  });
 }

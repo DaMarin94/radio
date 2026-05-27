@@ -16,6 +16,11 @@ export type RadioStation = {
 
   frequency: string | null;
   band: "AM" | "FM" | null;
+
+  lat: number | null;
+  lng: number | null;
+
+  clickcount: number;
 };
 
 export type RadioBrowserStation = {
@@ -33,4 +38,9 @@ export type RadioBrowserStation = {
 
   codec?: string;
   bitrate?: number;
+
+  geo_lat?: string | null;
+  geo_long?: string | null;
+
+  clickcount?: number;
 };

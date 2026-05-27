@@ -29,8 +29,14 @@ export function sortByBandAndFrequency(
     return bandDiff;
   }
 
-  return (
+  const freqDiff =
     getFrequencyValue(a.frequency) -
-    getFrequencyValue(b.frequency)
-  );
+    getFrequencyValue(b.frequency);
+
+  if (freqDiff !== 0) {
+    return freqDiff;
+  }
+
+  // Same frequency: prefer the more popular station
+  return (b.clickcount ?? 0) - (a.clickcount ?? 0);
 }
