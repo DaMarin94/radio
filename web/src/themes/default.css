@@ -10,7 +10,7 @@
   --spacing-page: 20px;
   
   --player-right: 20px;
-  --player-bottom: 20px;
+  --player-top: 20px;
   --player-gap: 12px;
   --player-padding: 16px;
 
@@ -40,17 +40,40 @@ body {
   box-sizing: border-box;
 }
 
-.selected-radio-info {
+.station-display {
+  flex: 1;
   display: flex;
-  align-items: center;
   flex-direction: column;
-  margin: 20px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: opacity 0.15s;
+}
+
+.station-display--preview {
+  opacity: 0.5;
+}
+
+.station-display-name {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.station-display-freq {
+  font-size: 20px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 1px;
 }
 
 .player-container {
   position: fixed;
   right: var(--player-right);
-  bottom: var(--player-bottom);
+  top: var(--player-top);
   z-index: 1000;
   background: var(--panel);
   color: var(--text);
@@ -64,7 +87,7 @@ body {
   bottom: var(--player-bottom);
   z-index: 1000;
   display: flex;
-  flex-direction: column;
+  flex-direction: row-reverse;
   align-items: center;
   gap: var(--player-gap);
   padding: var(--player-padding);
@@ -94,16 +117,21 @@ body {
 }
 
 .audio-player-slider {
-  width: 8px;
-  height: var(--slider-height);
-  margin-top: 15px;
+  width: 200px;
+  margin-right: 15px;
   cursor: pointer;
-  writing-mode: vertical-lr;
-  transform: rotate(180deg);
+  writing-mode: horizontal-tb;
 }
 
 .tuner-slider {
   padding: 16px 0;
+}
+
+@media (min-width: 768px) {
+  .station-display,
+  .tuner-slider {
+    padding-inline: 10%;
+  }
 }
 
 .tuner-slider-input {

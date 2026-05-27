@@ -104,7 +104,7 @@ function AudioPlayer({
       />
 
       <button
-        className="audio-player-button audio-player-button-large"
+        className="audio-player-button audio-player-button-small"
         onClick={() =>
           setIsMuted((prev) => !prev)
         }
@@ -114,7 +114,7 @@ function AudioPlayer({
 
       <button
         onClick={togglePlayback}
-        className="audio-player-button audio-player-button-large"
+        className="audio-player-button audio-player-button-small"
       >
         {isPlaying ? "❚❚" : "▶"}
       </button>

@@ -117,22 +117,24 @@ function App() {
 
       {selectedRadio && (
         <div className="player-container">
-          <AudioPlayer
-            selectedRadio={selectedRadio}
-          />
+          <AudioPlayer selectedRadio={selectedRadio} />
         </div>
       )}
 
-      {selectedRadio && (
-        <div className="selected-radio-info">
-          <h2>{selectedRadio.name}</h2>
-          <div>
-            {selectedRadio.band}
-            {" "}
-            {selectedRadio.frequency}
-          </div>
-        </div>
-      )}
+      <div className={`station-display${previewRadio ? " station-display--preview" : ""}`}>
+        {(previewRadio ?? selectedRadio) && (
+          <>
+            <div className="station-display-name">
+              {(previewRadio ?? selectedRadio)!.name}
+            </div>
+            <div className="station-display-freq">
+              {(previewRadio ?? selectedRadio)!.band}
+              {" "}
+              {(previewRadio ?? selectedRadio)!.frequency}
+            </div>
+          </>
+        )}
+      </div>
 
       <TunerSlider
         min={bandFilter === "AM" ? 530 : 76}
@@ -141,18 +143,6 @@ function App() {
         onChange={handleFrequencyChange}
         onRelease={handleFrequencyRelease}
       />
-
-      <div className="selected-radio-info">
-        <h2>
-          {previewRadio?.name}
-        </h2>
-
-        <div>
-          {previewRadio?.frequency}
-          {" "}
-          {previewRadio?.band}
-        </div>
-      </div>
 
     </div>
   );
