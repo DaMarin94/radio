@@ -1,0 +1,72 @@
+# Radio App — Guía para Claude
+
+## Flujo de trabajo con pedidos
+
+Ante cualquier pedido:
+1. Leer el código existente relevante
+2. Analizar el impacto en el proyecto (arquitectura, tipos, build, features existentes)
+3. Proponer el plan/solución con los archivos a tocar y por qué
+4. **Esperar aprobación antes de escribir cualquier código**
+
+## Antes de cualquier commit/push
+
+Siempre correr el build del frontend antes de subir:
+
+```bash
+cd web && npm run build
+```
+
+El backend no tiene build check automatizado; si se modificaron archivos `.ts` del backend, verificar que compila con `cd backend && npm run build`.
+
+## Estructura del proyecto
+
+```
+radio/
+├── backend/   Node + Express 5 + TypeScript  (puerto 3000)
+└── web/       React 19 + Vite + Tailwind CSS
+```
+
+Ver `docs/` para documentación detallada de arquitectura, pipeline de datos y features.
+
+## Stack y configuración
+
+- TypeScript strict en ambos lados: `noUnusedLocals`, `noUnusedParameters` activos
+- Si algo se comenta o desactiva en la UI, limpiar el estado/funciones asociadas del componente para que el build no falle
+- El frontend lee la URL del backend desde `VITE_API_URL` (`.env`)
+
+## Comandos frecuentes
+
+```bash
+# Dev
+cd backend && npm run dev     # http://localhost:3000
+cd web && npm run dev         # http://localhost:5173
+
+# Build
+cd web && npm run build
+cd backend && npm run build
+```
+
+## Git workflow
+
+1. Hacer los cambios
+2. `cd web && npm run build` — verificar que pasa sin errores
+3. Mostrar el diff y proponer el mensaje de commit — **esperar aprobación**
+4. Commit recién después del OK
+5. Proponer el push — **esperar aprobación** antes de pushear a origin
+
+## Decisiones de diseño importantes
+
+- **No es una lista de radios** — es un tuner con dial físico. No agregar UI tipo playlist/lista.
+- **Nearby mode** está implementado en el backend (`/radios/by-location`, `/radios/nearby`) pero el botón está oculto en la UI intencionalmente. No re-agregar sin que lo pidan.
+- **Radio Browser API**: usar siempre `all.api.radio-browser.info` (round-robin). Nunca hardcodear un server específico (`de1`, `de2`, etc.).
+- **Frecuencias que se pisan**: el tiebreaker es `clickcount` descendente — la más popular gana.
+- **Estaciones sin `state`** en Radio Browser se incluyen en el filtro de Buenos Aires (muchas radios BA legítimas no tienen ese campo completo, e.g. Blue 100.7, Aspen).
+
+## Cuando algo no aparece en el dial
+
+Checklist:
+1. ¿Tiene `url_resolved` no vacía? (`hasValidStream`)
+2. ¿Tiene `state: "Buenos Aires"` o `state` vacío? (`isBuenosAiresStation`)
+3. ¿Tiene frecuencia extraíble del nombre? (regex `\d{2,4}(?:\.\d)?`)
+4. ¿Tiene `band` detectable? (texto "AM"/"FM" en el nombre, o frecuencia en rango)
+5. ¿Es duplicado por nombre? (`removeDuplicateStations`)
