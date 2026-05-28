@@ -85,8 +85,14 @@ export function useTuner() {
     const savedId = localStorage.getItem(`selectedRadio-${nextBand}`);
     if (savedId) {
       const saved = radios.find((r) => r.id === savedId);
-      if (saved) setSelectedRadio(saved);
+      if (saved) {
+        setSelectedRadio(saved);
+        return;
+      }
     }
+    const nextBandRadios = radios.filter((r) => r.band === nextBand);
+    const closest = resolveStationByTuning(newFreq, nextBandRadios);
+    setSelectedRadio(closest);
   }
 
   return {
