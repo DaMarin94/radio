@@ -1,13 +1,13 @@
 [data-theme="warm"] {
-  --bg: #0f0a06;
-  --panel: #1c1208;
-  --panel-light: #2a1c0c;
-  --text: #d4956a;
-  --text-secondary: #6b3f20;
-  --shadow: 0 0 24px rgba(212, 149, 106, 0.08);
-  --needle: #e8722a;
-  --track-hi: #3d2010;
-  --track-lo: #1c1208;
+  --bg: #120400;
+  --panel: #1e0800;
+  --panel-light: #2e1000;
+  --text: #ff7a2a;
+  --text-secondary: #7a2e00;
+  --shadow: 0 0 24px rgba(255, 122, 42, 0.08);
+  --needle: #ff4400;
+  --track-hi: #4a1800;
+  --track-lo: #1e0800;
   --track-radius: 2px;
   --track-hi-w: 5px;
   --track-lo-w: 3px;

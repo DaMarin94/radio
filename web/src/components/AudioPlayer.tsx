@@ -101,7 +101,8 @@ function AudioPlayer({ selectedRadio, isTuning, onError }: Props) {
     audio.addEventListener("error", handleError);
 
     audio.src = selectedRadio.streamUrl;
-    audio.play().catch((err) => {
+    audio.play().catch((err: DOMException) => {
+      if (err.name === "AbortError") return;
       console.error(err);
       onError?.();
     });

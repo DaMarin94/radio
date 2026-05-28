@@ -11,5 +11,16 @@
   --track-radius: 2px;
   --track-hi-w: 5px;
   --track-lo-w: 3px;
+}
 
+[data-theme="blue"] body {
+  background-color: #050a12;
+  background-image:
+    linear-gradient(to bottom, #050a12 0%, transparent 65%),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='40'><path d='M0 20 Q50 5 100 20 Q150 35 200 20 Q250 5 300 20 Q350 35 400 20' stroke='%234fc3f7' stroke-opacity='0.10' fill='none' stroke-width='1.5'/></svg>"),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='40'><path d='M0 20 Q50 5 100 20 Q150 35 200 20 Q250 5 300 20 Q350 35 400 20' stroke='%234fc3f7' stroke-opacity='0.06' fill='none' stroke-width='1.5'/></svg>"),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='40'><path d='M0 20 Q50 5 100 20 Q150 35 200 20 Q250 5 300 20 Q350 35 400 20' stroke='%234fc3f7' stroke-opacity='0.03' fill='none' stroke-width='1.5'/></svg>");
+  background-size: 100% 100%, 400px 40px, 400px 40px, 400px 40px;
+  background-repeat: no-repeat, repeat-x, repeat-x, repeat-x;
+  background-position: top, bottom 0px center, bottom 40px center, bottom 80px center;
 }
