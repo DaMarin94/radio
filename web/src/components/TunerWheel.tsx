@@ -128,13 +128,15 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
 
   if (orientation === "horizontal") {
     const centerX = containerW / 2;
+    const R = containerW * 0.45; // cylinder radius — controls edge compression
     const ticks: React.ReactNode[] = [];
 
     for (let k = liveK - H_HALF_RENDER; k <= liveK + H_HALF_RENDER; k++) {
       const rawFreq = startValueRef.current + k * step;
       if (rawFreq < min - 1e-9 || rawFreq > max + 1e-9) continue;
       const freq = snap(rawFreq, precision, min, max);
-      const xPos = centerX + k * H_ITEM_W + dragOffset;
+      const linearOffset = k * H_ITEM_W + dragOffset;
+      const xPos = centerX + R * Math.sin(linearOffset / R);
       if (xPos < -H_ITEM_W * 2 || xPos > containerW + H_ITEM_W * 2) continue;
 
       const label = isLabelFreq(freq, band);
