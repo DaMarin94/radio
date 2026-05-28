@@ -1,3 +1,5 @@
+/* ── Vertical drum ───────────────────────────────────────────────────────── */
+
 .drum {
   position: relative;
   width: 160px;
@@ -66,3 +68,106 @@
 
 .centerBorderTop    { top: calc(50% - var(--item-h, 44px) / 2); }
 .centerBorderBottom { top: calc(50% + var(--item-h, 44px) / 2 - 1px); }
+
+
+/* ── Horizontal drum ─────────────────────────────────────────────────────── */
+
+.drumH {
+  position: relative;
+  width: 400px;
+  height: 72px;
+  overflow: hidden;
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  background: var(--panel);
+  border-radius: 6px;
+
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
+}
+
+.drumH:active {
+  cursor: grabbing;
+}
+
+.tick {
+  position: absolute;
+  width: 2px;
+  background: var(--text-secondary);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.tickLabel {
+  position: absolute;
+  top: 48px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.needle {
+  position: absolute;
+  top: 8px;
+  bottom: 20px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--needle);
+  opacity: 0.75;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+
+/* ── Default theme overrides ─────────────────────────────────────────────── */
+
+:global([data-theme=""]) .drumH {
+  mask-image: none;
+  -webkit-mask-image: none;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
+}
+
+:global([data-theme=""]) .drumH::before,
+:global([data-theme=""]) .drumH::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 40px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+:global([data-theme=""]) .drumH::before {
+  left: 0;
+  background: linear-gradient(to right, var(--panel) 0%, transparent 100%);
+}
+
+:global([data-theme=""]) .drumH::after {
+  right: 0;
+  background: linear-gradient(to left, var(--panel) 0%, transparent 100%);
+}
+
+:global([data-theme=""]) .needle {
+  opacity: 0.9;
+}

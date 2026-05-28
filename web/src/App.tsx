@@ -40,24 +40,30 @@ function App() {
 
 
 
-      <div className={`flex-1 flex flex-col items-center justify-center gap-2.5 transition-opacity md:px-[10%]${tuner.previewRadio ? " opacity-50" : ""}`}>
-              <div className="flex justify-center pb-4">
-        <TunerWheel
-          band={tuner.band}
-          value={tuner.frequency}
-          onChange={tuner.handleFrequencyChange}
-          onRelease={tuner.handleFrequencyRelease}
-        />
-      </div>
+      <div className="flex-1 flex flex-col items-center justify-center gap-2.5 md:px-[10%]">
+        <div className="text-center select-none">
+          <span className="text-4xl font-bold text-fg tabular-nums tracking-tight">
+            {tuner.band === "FM" ? tuner.frequency.toFixed(1) : tuner.frequency}
+          </span>
+          <span className="text-lg text-fg-muted font-medium ml-2">{tuner.band}</span>
+        </div>
+        <div className="flex justify-center pb-2">
+          <TunerWheel
+            band={tuner.band}
+            value={tuner.frequency}
+            onChange={tuner.handleFrequencyChange}
+            onRelease={tuner.handleFrequencyRelease}
+          />
+        </div>
         {displayRadio && (
-          <>
+          <div className={`flex flex-col items-center gap-2.5 transition-opacity${tuner.previewRadio ? " opacity-50" : ""}`}>
             <div className="text-[40px] font-bold text-fg text-center tracking-tight leading-tight">
               {displayRadio.name}
             </div>
             <div className="text-xl text-fg-muted font-medium tracking-widest">
               {displayRadio.band} {displayRadio.frequency}
             </div>
-          </>
+          </div>
         )}
       </div>
 
