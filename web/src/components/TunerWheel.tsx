@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import styles from "./TunerWheel.module.css";
 
 type Band = "AM" | "FM";
@@ -26,8 +26,7 @@ const V_CENTER_Y = V_CONTAINER_H / 2;
 // Horizontal layout
 const H_ITEM_W = 12;
 const H_HALF_RENDER = 22;
-const H_CONTAINER_W = 400;
-const H_CENTER_X = H_CONTAINER_W / 2;
+const H_CONTAINER_W = 400; // max/initial width
 const TICK_BASELINE = 42;
 const TICK_LARGE = 24;
 const TICK_MEDIUM = 16;
@@ -51,6 +50,7 @@ function isMediumFreq(freq: number, band: Band): boolean {
 function TunerWheel({ band, value, onChange, onRelease, orientation = "horizontal" }: Props) {
   const { min, max, step, precision } = SCALES[band];
   const [dragOffset, setDragOffset] = useState(0);
+  const [containerW, setContainerW] = useState(H_CONTAINER_W);
   const isDraggingRef = useRef(false);
   const startPosRef = useRef(0);
   const startValueRef = useRef(value);
@@ -63,6 +63,17 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
   onReleaseRef.current = onRelease;
 
   if (!isDraggingRef.current) startValueRef.current = value;
+
+  // Track actual container width for correct center calculation
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el || orientation !== "horizontal") return;
+    const ro = new ResizeObserver(entries => {
+      setContainerW(entries[0].contentRect.width);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [orientation]);
 
   const ITEM_SIZE = orientation === "horizontal" ? H_ITEM_W : ITEM_H;
   const liveK = Math.round(-dragOffset / ITEM_SIZE);
@@ -116,19 +127,20 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
   // ── Horizontal mode ────────────────────────────────────────────────────────
 
   if (orientation === "horizontal") {
+    const centerX = containerW / 2;
     const ticks: React.ReactNode[] = [];
 
     for (let k = liveK - H_HALF_RENDER; k <= liveK + H_HALF_RENDER; k++) {
       const rawFreq = startValueRef.current + k * step;
       if (rawFreq < min - 1e-9 || rawFreq > max + 1e-9) continue;
       const freq = snap(rawFreq, precision, min, max);
-      const xPos = H_CENTER_X + k * H_ITEM_W + dragOffset;
-      if (xPos < -H_ITEM_W * 2 || xPos > H_CONTAINER_W + H_ITEM_W * 2) continue;
+      const xPos = centerX + k * H_ITEM_W + dragOffset;
+      if (xPos < -H_ITEM_W * 2 || xPos > containerW + H_ITEM_W * 2) continue;
 
       const label = isLabelFreq(freq, band);
       const medium = !label && isMediumFreq(freq, band);
       const tickH = label ? TICK_LARGE : medium ? TICK_MEDIUM : TICK_SMALL;
-      const dist = Math.abs(xPos - H_CENTER_X) / H_ITEM_W;
+      const dist = Math.abs(xPos - centerX) / H_ITEM_W;
       const opacity = Math.max(0.12, 1 - dist * 0.045);
 
       ticks.push(
