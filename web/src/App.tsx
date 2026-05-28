@@ -8,7 +8,11 @@ import { useTuner } from "./hooks/useTuner";
 function App() {
   const tuner = useTuner();
 
-  const [theme, setTheme] = useState<string>(() => localStorage.getItem("theme") ?? "retro");
+  const THEMES = ["digital", "dark", "amber", "blue", "light", "warm"] as const;
+  type Theme = typeof THEMES[number];
+  const THEME_LABELS: Record<Theme, string> = { digital: "digital", dark: "dark", amber: "amber", blue: "blue", light: "light", warm: "warm" };
+
+  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem("theme") ?? "digital") as Theme);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -25,11 +29,11 @@ function App() {
         <div className="flex items-center gap-3">
           <AudioPlayer selectedRadio={tuner.selectedRadio} isTuning={tuner.isTuning} />
           <button
-            onClick={() => setTheme(t => t === "retro" ? "" : "retro")}
+            onClick={() => setTheme(t => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length])}
             className="border-none cursor-pointer bg-panel-light text-fg rounded-full text-[10px] font-bold tracking-wider uppercase shrink-0"
             style={{ width: "var(--button-size)", height: "var(--button-size)" }}
           >
-            {theme === "retro" ? "retro" : "dark"}
+            {THEME_LABELS[theme]}
           </button>
         </div>
       </div>

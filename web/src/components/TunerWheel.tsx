@@ -8,7 +8,6 @@ type Props = {
   value: number;
   onChange: (value: number) => void;
   onRelease: (value: number) => void;
-  orientation?: "vertical" | "horizontal";
 };
 
 const SCALES = {
@@ -16,26 +15,17 @@ const SCALES = {
   AM: { min: 530, max: 1700, step: 1, precision: 1 },
 } as const;
 
-// Vertical layout
-const ITEM_H = 44;
-const V_HALF_VISIBLE = 2;
-const V_HALF_RENDER = V_HALF_VISIBLE + 2;
-const V_CONTAINER_H = (V_HALF_VISIBLE * 2 + 1) * ITEM_H;
-const V_CENTER_Y = V_CONTAINER_H / 2;
-
-// Horizontal layout
 const H_ITEM_W = 12;
-
-const H_CONTAINER_W = 400; // max/initial width
-const TICK_BASELINE = 54;  // FM ticks hang from here
-const TICK_LARGE = 24;
-const TICK_MEDIUM = 16;
-const TICK_SMALL = 8;
-const FM_LABEL_TOP = 12;   // FM numbers above the ticks
-const TOTAL_DRUM_W = 320 * H_ITEM_W; // FM steps × px — unified norm space
-const AM_ITEM_W = TOTAL_DRUM_W / 1170; // AM steps = (1700-530)/1 — same visual density as FM
-const AM_TICK_TOP = 66;
-const AM_LABEL_TOP = 94;
+const H_CONTAINER_W = 400;
+const TICK_BASELINE = 68;
+const TICK_LARGE = 28;
+const TICK_MEDIUM = 18;
+const TICK_SMALL = 9;
+const FM_LABEL_TOP = 14;
+const TOTAL_DRUM_W = 320 * H_ITEM_W;
+const AM_ITEM_W = TOTAL_DRUM_W / 1170;
+const AM_TICK_TOP = 82;
+const AM_LABEL_TOP = 120;
 
 function snap(val: number, precision: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(val * precision) / precision));
@@ -52,7 +42,7 @@ function isMediumFreq(freq: number, band: Band): boolean {
   return freq % 50 === 0;
 }
 
-function TunerWheel({ band, value, onChange, onRelease, orientation = "horizontal" }: Props) {
+function TunerWheel({ band, value, onChange, onRelease }: Props) {
   const { min, max, step, precision } = SCALES[band];
   const [dragOffset, setDragOffset] = useState(0);
   const [containerW, setContainerW] = useState(H_CONTAINER_W);
@@ -69,20 +59,17 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
 
   if (!isDraggingRef.current) startValueRef.current = value;
 
-  // Track actual container width for correct center calculation
   useLayoutEffect(() => {
     const el = containerRef.current;
-    if (!el || orientation !== "horizontal") return;
+    if (!el) return;
     const ro = new ResizeObserver(entries => {
       setContainerW(entries[0].contentRect.width);
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [orientation]);
+  }, []);
 
-  const ITEM_SIZE = orientation === "horizontal"
-    ? (band === "AM" ? AM_ITEM_W : H_ITEM_W)
-    : ITEM_H;
+  const ITEM_SIZE = band === "AM" ? AM_ITEM_W : H_ITEM_W;
   const liveK = Math.round(-dragOffset / ITEM_SIZE);
   const liveValue = snap(startValueRef.current + liveK * step, precision, min, max);
 
@@ -92,19 +79,20 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
     const { min: sMin, max: sMax, step: wStep, precision: prec } = SCALES[band];
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const raw = orientation === "horizontal" && e.deltaX !== 0 ? e.deltaX : e.deltaY;
-      const delta = raw > 0 ? -wStep : wStep;
+      const delta = e.deltaX !== 0
+        ? (e.deltaX > 0 ? -wStep : wStep)
+        : (e.deltaY > 0 ? -wStep : wStep);
       const next = snap(valueRef.current + delta, prec, sMin, sMax);
       onChangeRef.current(next);
       onReleaseRef.current(next);
     };
     el.addEventListener("wheel", handleWheel, { passive: false });
     return () => el.removeEventListener("wheel", handleWheel);
-  }, [band, orientation]);
+  }, [band]);
 
   function handlePointerDown(e: React.PointerEvent<HTMLDivElement>) {
     isDraggingRef.current = true;
-    startPosRef.current = orientation === "horizontal" ? e.clientX : e.clientY;
+    startPosRef.current = e.clientX;
     startValueRef.current = valueRef.current;
     setDragOffset(0);
     e.currentTarget.setPointerCapture(e.pointerId);
@@ -113,8 +101,7 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
   function handlePointerMove(e: React.PointerEvent<HTMLDivElement>) {
     if (!isDraggingRef.current) return;
     const { min: sMin, max: sMax, step: wStep, precision: prec } = SCALES[band];
-    const pos = orientation === "horizontal" ? e.clientX : e.clientY;
-    const raw = pos - startPosRef.current;
+    const raw = e.clientX - startPosRef.current;
     const maxPos = ((startValueRef.current - sMin) / wStep) * ITEM_SIZE;
     const maxNeg = ((sMax - startValueRef.current) / wStep) * ITEM_SIZE;
     const offset = Math.min(maxPos, Math.max(-maxNeg, raw));
@@ -131,147 +118,96 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
     setDragOffset(0);
   }
 
-  // ── Horizontal mode ────────────────────────────────────────────────────────
+  const centerX = containerW / 2;
+  const R = containerW * 0.45;
+  const ticks: React.ReactNode[] = [];
 
-  if (orientation === "horizontal") {
-    const centerX = containerW / 2;
-    const R = containerW * 0.45; // cylinder radius — controls edge compression
-    const ticks: React.ReactNode[] = [];
+  const startPos = band === "FM"
+    ? (startValueRef.current - 76) / 32
+    : (startValueRef.current - 530) / 1170;
+  const livePos = Math.max(0, Math.min(1, startPos - dragOffset / TOTAL_DRUM_W));
 
-    // Continuous normalised position — derived from raw dragOffset, not snapped liveK
-    // This keeps the visual fluid; liveK/liveValue handle snap for onChange callbacks
-    const startPos = band === "FM"
-      ? (startValueRef.current - 76) / 32
-      : (startValueRef.current - 530) / 1170;
-    const livePos = Math.max(0, Math.min(1, startPos - dragOffset / TOTAL_DRUM_W));
+  // ── FM ticks (top row) ───────────────────────────────────────────────────
+  const fmCenter = 76 + livePos * 32;
+  const fmVisHalf = (containerW * 0.8 / TOTAL_DRUM_W) * 32 + 0.5;
+  const fmStart = Math.ceil((fmCenter - fmVisHalf) * 10) / 10;
+  const fmEnd   = Math.floor((fmCenter + fmVisHalf) * 10) / 10;
 
-    // ── FM ticks (top row) — always use FM scale via livePos ─────────────────
-    const fmCenter = 76 + livePos * 32;
-    const fmVisHalf = (containerW * 0.8 / TOTAL_DRUM_W) * 32 + 0.5;
-    const fmStart = Math.ceil((fmCenter - fmVisHalf) * 10) / 10;
-    const fmEnd   = Math.floor((fmCenter + fmVisHalf) * 10) / 10;
+  for (let f = fmStart; f <= fmEnd + 0.05; f = Math.round((f + 0.1) * 10) / 10) {
+    if (f < 76 || f > 108) continue;
+    const freq = snap(f, 10, 76, 108);
+    const norm = (freq - 76) / 32;
+    const xLinear = (norm - livePos) * TOTAL_DRUM_W;
+    if (Math.abs(xLinear / R) >= Math.PI / 2) continue;
+    const xPos = centerX + R * Math.sin(xLinear / R);
 
-    for (let f = fmStart; f <= fmEnd + 0.05; f = Math.round((f + 0.1) * 10) / 10) {
-      if (f < 76 || f > 108) continue;
-      const freq = snap(f, 10, 76, 108);
-      const norm = (freq - 76) / 32;
-      const xLinear = (norm - livePos) * TOTAL_DRUM_W;
-      const xPos = centerX + R * Math.sin(xLinear / R);
-      if (xPos < -H_ITEM_W * 2 || xPos > containerW + H_ITEM_W * 2) continue;
+    const label = isLabelFreq(freq, "FM");
+    const medium = !label && isMediumFreq(freq, "FM");
+    const tickH = label ? TICK_LARGE : medium ? TICK_MEDIUM : TICK_SMALL;
+    const dist = Math.abs(xPos - centerX) / H_ITEM_W;
+    const base = Math.max(0.12, 1 - dist * 0.045);
+    const opacity = band === "FM" ? base : base * 0.4;
 
-      const label = isLabelFreq(freq, "FM");
-      const medium = !label && isMediumFreq(freq, "FM");
-      const tickH = label ? TICK_LARGE : medium ? TICK_MEDIUM : TICK_SMALL;
-      const dist = Math.abs(xPos - centerX) / H_ITEM_W;
-      const base = Math.max(0.12, 1 - dist * 0.045);
-      const opacity = band === "FM" ? base : base * 0.4;
-
-      ticks.push(
-        <div key={`fm-t-${f.toFixed(1)}`} className={styles.tick}
-          style={{ left: xPos - 1, top: TICK_BASELINE - tickH, height: tickH, opacity }} />
-      );
-      if (label) {
-        ticks.push(
-          <div key={`fm-l-${f.toFixed(1)}`} className={styles.tickLabel} style={{ left: xPos, top: FM_LABEL_TOP, opacity }}>
-            {Math.round(freq)}
-          </div>
-        );
-      }
-    }
-
-    // ── AM ticks (bottom row) ───────────────────────────────────────────────
-    const amCenter = 530 + livePos * 1170;
-    const amVisHalf = (containerW * 0.8 / TOTAL_DRUM_W) * 1170 + 20;
-    const amStart = Math.ceil((amCenter - amVisHalf) / 10) * 10;
-    const amEnd = Math.floor((amCenter + amVisHalf) / 10) * 10;
-
-    for (let f = amStart; f <= amEnd; f += 10) {
-      if (f < 530 || f > 1700) continue;
-      const norm = (f - 530) / 1170;
-      const xLinear = (norm - livePos) * TOTAL_DRUM_W;
-      const xPos = centerX + R * Math.sin(xLinear / R);
-      if (xPos < -H_ITEM_W * 2 || xPos > containerW + H_ITEM_W * 2) continue;
-
-      const label = f % 100 === 0;
-      const medium = !label && f % 50 === 0;
-      const tickH = label ? TICK_LARGE : medium ? TICK_MEDIUM : TICK_SMALL;
-      const dist = Math.abs(xPos - centerX) / H_ITEM_W;
-      const base = Math.max(0.12, 1 - dist * 0.045);
-      const opacity = band === "AM" ? base : base * 0.4;
-
-      ticks.push(
-        <div key={`am-t-${f}`} className={styles.tick}
-          style={{ left: xPos - 1, top: AM_TICK_TOP, height: tickH, opacity }} />
-      );
-      if (label) {
-        ticks.push(
-          <div key={`am-l-${f}`} className={styles.tickLabel}
-            style={{ left: xPos, top: AM_LABEL_TOP, opacity }}>
-            {f}
-          </div>
-        );
-      }
-    }
-
-    return (
-      <div
-        ref={containerRef}
-        className={styles.drumH}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-      >
-        {ticks}
-        <div className={styles.divider} />
-        <div className={styles.needle} />
-      </div>
+    ticks.push(
+      <div key={`fm-t-${f.toFixed(1)}`} className={styles.tick}
+        style={{ left: xPos - 1, top: TICK_BASELINE - tickH, height: tickH, opacity }} />
     );
+    if (label) {
+      ticks.push(
+        <div key={`fm-l-${f.toFixed(1)}`} className={styles.tickLabel}
+          style={{ left: xPos, top: FM_LABEL_TOP, opacity }}>
+          {Math.round(freq)}
+        </div>
+      );
+    }
   }
 
-  // ── Vertical mode ──────────────────────────────────────────────────────────
+  // ── AM ticks (bottom row) ────────────────────────────────────────────────
+  const amCenter = 530 + livePos * 1170;
+  const amVisHalf = (containerW * 0.8 / TOTAL_DRUM_W) * 1170 + 20;
+  const amStart = Math.ceil((amCenter - amVisHalf) / 10) * 10;
+  const amEnd = Math.floor((amCenter + amVisHalf) / 10) * 10;
 
-  const items: React.ReactNode[] = [];
-  for (let k = liveK - V_HALF_RENDER; k <= liveK + V_HALF_RENDER; k++) {
-    const rawFreq = startValueRef.current + k * step;
-    if (rawFreq < min - 1e-9 || rawFreq > max + 1e-9) continue;
-    const freq = snap(rawFreq, precision, min, max);
-    const yCenter = V_CENTER_Y + k * ITEM_H + dragOffset;
-    if (yCenter < -ITEM_H || yCenter > V_CONTAINER_H + ITEM_H) continue;
+  for (let f = amStart; f <= amEnd; f += 10) {
+    if (f < 530 || f > 1700) continue;
+    const norm = (f - 530) / 1170;
+    const xLinear = (norm - livePos) * TOTAL_DRUM_W;
+    if (Math.abs(xLinear / R) >= Math.PI / 2) continue;
+    const xPos = centerX + R * Math.sin(xLinear / R);
 
-    const dist = Math.abs(yCenter - V_CENTER_Y) / ITEM_H;
-    const opacity = Math.max(0, 1 - dist * 0.5);
-    const scaleY = Math.max(0.6, 1 - dist * 0.18);
-    const isCenter = k === liveK;
+    const label = f % 100 === 0;
+    const medium = !label && f % 50 === 0;
+    const tickH = label ? TICK_LARGE : medium ? TICK_MEDIUM : TICK_SMALL;
+    const dist = Math.abs(xPos - centerX) / H_ITEM_W;
+    const base = Math.max(0.12, 1 - dist * 0.045);
+    const opacity = band === "AM" ? base : base * 0.4;
 
-    items.push(
-      <div
-        key={`${k}-${freq}`}
-        className={`${styles.item} ${isCenter ? styles.itemCenter : ""}`}
-        style={{
-          top: yCenter - ITEM_H / 2,
-          opacity,
-          transform: `scaleY(${scaleY})`,
-        }}
-      >
-        {freq}
-      </div>
+    ticks.push(
+      <div key={`am-t-${f}`} className={styles.tick}
+        style={{ left: xPos - 1, top: AM_TICK_TOP, height: tickH, opacity }} />
     );
+    if (label) {
+      ticks.push(
+        <div key={`am-l-${f}`} className={styles.tickLabel}
+          style={{ left: xPos, top: AM_LABEL_TOP, opacity }}>
+          {f}
+        </div>
+      );
+    }
   }
 
   return (
     <div
       ref={containerRef}
-      className={styles.drum}
-      style={{ "--item-h": `${ITEM_H}px` } as React.CSSProperties}
+      className={styles.drumH}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
     >
-      {items}
-      <div className={styles.centerBorderTop} />
-      <div className={styles.centerBorderBottom} />
+      {ticks}
+      <div className={styles.divider} />
+      <div className={styles.needle} />
     </div>
   );
 }

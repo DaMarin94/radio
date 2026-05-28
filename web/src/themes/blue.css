@@ -1,0 +1,14 @@
+[data-theme="blue"] {
+  --bg: #050a12;
+  --panel: #0a1628;
+  --panel-light: #0f2040;
+  --text: #4fc3f7;
+  --text-secondary: #1a4a6e;
+  --shadow: 0 0 24px rgba(79, 195, 247, 0.08);
+  --needle: #00e5ff;
+  --track-hi: #0a2a4a;
+  --track-lo: #050a12;
+  --track-radius: 2px;
+  --track-hi-w: 5px;
+  --track-lo-w: 3px;
+}

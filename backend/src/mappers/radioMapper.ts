@@ -20,7 +20,7 @@ export function mapRadioStation(
     id: station.stationuuid,
 
     name,
-    displayName: formatDisplayName(name, band, frequency),
+    displayName: formatDisplayName(name),
 
     streamUrl: station.url_resolved,
 

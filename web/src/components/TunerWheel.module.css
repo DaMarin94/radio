@@ -1,81 +1,9 @@
-/* ── Vertical drum ───────────────────────────────────────────────────────── */
-
-.drum {
-  position: relative;
-  width: 160px;
-  height: calc(var(--item-h, 44px) * 5);
-  overflow: hidden;
-  cursor: grab;
-  user-select: none;
-  touch-action: none;
-  background: var(--panel);
-  border-radius: 6px;
-
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 22%,
-    black 78%,
-    transparent 100%
-  );
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    transparent 0%,
-    black 22%,
-    black 78%,
-    transparent 100%
-  );
-}
-
-.drum:active {
-  cursor: grabbing;
-}
-
-.item {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: var(--item-h, 44px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.03em;
-  transform-origin: center center;
-  pointer-events: none;
-}
-
-.itemCenter {
-  color: var(--needle);
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.centerBorderTop,
-.centerBorderBottom {
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  height: 1px;
-  background: var(--text-secondary);
-  opacity: 0.25;
-  pointer-events: none;
-}
-
-.centerBorderTop    { top: calc(50% - var(--item-h, 44px) / 2); }
-.centerBorderBottom { top: calc(50% + var(--item-h, 44px) / 2 - 1px); }
-
-
-/* ── Horizontal drum ─────────────────────────────────────────────────────── */
+/* ── Drum ────────────────────────────────────────────────────────────────── */
 
 .drumH {
   position: relative;
   width: min(400px, 100%);
-  height: 120px;
+  height: 150px;
   overflow: hidden;
   cursor: grab;
   user-select: none;
@@ -140,7 +68,7 @@
   position: absolute;
   left: 8%;
   right: 8%;
-  top: 62px;
+  top: 77px;
   height: 1px;
   background: var(--text-secondary);
   opacity: 0.15;
@@ -151,15 +79,15 @@
 
 /* ── Default theme overrides ─────────────────────────────────────────────── */
 
-:global([data-theme=""]) .drumH {
+:global([data-theme="dark"]) .drumH {
   mask-image: none;
   -webkit-mask-image: none;
   border: 1px solid rgba(255, 255, 255, 0.07);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.55);
 }
 
-:global([data-theme=""]) .drumH::before,
-:global([data-theme=""]) .drumH::after {
+:global([data-theme="dark"]) .drumH::before,
+:global([data-theme="dark"]) .drumH::after {
   content: '';
   position: absolute;
   top: 0;
@@ -169,16 +97,44 @@
   pointer-events: none;
 }
 
-:global([data-theme=""]) .drumH::before {
+:global([data-theme="dark"]) .drumH::before {
   left: 0;
   background: linear-gradient(to right, var(--panel) 0%, transparent 100%);
 }
 
-:global([data-theme=""]) .drumH::after {
+:global([data-theme="dark"]) .drumH::after {
   right: 0;
   background: linear-gradient(to left, var(--panel) 0%, transparent 100%);
 }
 
-:global([data-theme=""]) .needle {
+:global([data-theme="dark"]) .needle {
   opacity: 0.9;
+}
+
+:global([data-theme="light"]) .drumH {
+  mask-image: none;
+  -webkit-mask-image: none;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+:global([data-theme="light"]) .drumH::before,
+:global([data-theme="light"]) .drumH::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+:global([data-theme="light"]) .drumH::before {
+  left: 0;
+  background: linear-gradient(to right, var(--panel) 0%, transparent 100%);
+}
+
+:global([data-theme="light"]) .drumH::after {
+  right: 0;
+  background: linear-gradient(to left, var(--panel) 0%, transparent 100%);
 }

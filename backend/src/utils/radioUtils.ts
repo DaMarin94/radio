@@ -1,4 +1,4 @@
-export function formatDisplayName(name: string, band: "AM" | "FM" | null, frequency: string): string {
+export function formatDisplayName(name: string): string {
   const clean = name.trim().replace(/\s+/g, " ");
 
   const sanitize = (s: string) =>
@@ -31,7 +31,7 @@ export function formatDisplayName(name: string, band: "AM" | "FM" | null, freque
     base = sanitize(stripped) || sanitize(clean) || clean;
   }
 
-  return band ? `${base} ${band} ${frequency}` : base;
+  return base;
 }
 
 export function extractFrequency(

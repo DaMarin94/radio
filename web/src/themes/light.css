@@ -1,0 +1,14 @@
+[data-theme="light"] {
+  --bg: #f5f0e8;
+  --panel: #e8e0d0;
+  --panel-light: #d8ccc0;
+  --text: #2c2418;
+  --text-secondary: #8a7a60;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  --needle: #c05000;
+  --track-hi: #b8a898;
+  --track-lo: #d8ccc0;
+  --track-radius: 999px;
+  --track-hi-w: 2px;
+  --track-lo-w: 6px;
+}
