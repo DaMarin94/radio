@@ -72,7 +72,15 @@ export function useTuner() {
 
   function changeBand(nextBand: Band) {
     setBand(nextBand);
-    setFrequency(getSavedFrequency(nextBand));
+
+    // Keep dial at same normalised position
+    const pos = Math.max(0, Math.min(1,
+      band === "FM" ? (frequency - 76) / 32 : (frequency - 530) / 1170
+    ));
+    const newFreq = nextBand === "FM"
+      ? Math.min(108, Math.max(76, Math.round((76 + pos * 32) * 10) / 10))
+      : Math.min(1700, Math.max(530, Math.round(530 + pos * 1170)));
+    setFrequency(newFreq);
 
     const savedId = localStorage.getItem(`selectedRadio-${nextBand}`);
     if (savedId) {
