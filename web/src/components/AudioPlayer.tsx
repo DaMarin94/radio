@@ -5,9 +5,10 @@ import styles from "./AudioPlayer.module.css";
 type Props = {
   selectedRadio: RadioStation | null;
   isTuning: boolean;
+  onError?: () => void;
 };
 
-function AudioPlayer({ selectedRadio, isTuning }: Props) {
+function AudioPlayer({ selectedRadio, isTuning, onError }: Props) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const staticSourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -26,14 +27,12 @@ function AudioPlayer({ selectedRadio, isTuning }: Props) {
 
   const shouldPlayStatic = !isMuted && (isTuning || (selectedRadio !== null && !audioReady));
 
-  // Mute the audio stream while static is playing
   useEffect(() => {
     if (!audioRef.current) return;
     audioRef.current.muted = isMuted || shouldPlayStatic;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isMuted, shouldPlayStatic]);
 
-  // Start/stop white noise static
   useEffect(() => {
     if (!shouldPlayStatic) return;
 
@@ -77,7 +76,6 @@ function AudioPlayer({ selectedRadio, isTuning }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shouldPlayStatic]);
 
-  // Update static gain when volume changes
   useEffect(() => {
     if (staticGainRef.current) {
       staticGainRef.current.gain.value = volume * 0.08;
@@ -98,13 +96,19 @@ function AudioPlayer({ selectedRadio, isTuning }: Props) {
 
     const audio = audioRef.current;
     const handlePlaying = () => setAudioReady(true);
+    const handleError = () => onError?.();
     audio.addEventListener("playing", handlePlaying);
+    audio.addEventListener("error", handleError);
 
     audio.src = selectedRadio.streamUrl;
-    audio.play().catch(console.error);
+    audio.play().catch((err) => {
+      console.error(err);
+      onError?.();
+    });
 
     return () => {
       audio.removeEventListener("playing", handlePlaying);
+      audio.removeEventListener("error", handleError);
     };
   }, [selectedRadio]);
 

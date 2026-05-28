@@ -19,6 +19,10 @@ function App() {
     localStorage.setItem("theme", theme);
   }, [theme]);
 
+  const [streamError, setStreamError] = useState(false);
+
+  useEffect(() => { setStreamError(false); }, [tuner.selectedRadio]);
+
   const displayRadio = tuner.previewRadio ?? tuner.selectedRadio;
 
   return (
@@ -27,7 +31,7 @@ function App() {
         <BandSwitch value={tuner.band} onChange={tuner.changeBand} />
 
         <div className="flex items-center gap-3">
-          <AudioPlayer selectedRadio={tuner.selectedRadio} isTuning={tuner.isTuning} />
+          <AudioPlayer selectedRadio={tuner.selectedRadio} isTuning={tuner.isTuning} onError={() => setStreamError(true)} />
           <button
             onClick={() => setTheme(t => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length])}
             className="border-none cursor-pointer bg-panel-light text-fg rounded-full text-[10px] font-bold tracking-wider uppercase shrink-0"
@@ -57,7 +61,7 @@ function App() {
           {displayRadio && (
             <div className={`flex flex-col items-center gap-1 text-center transition-opacity${tuner.previewRadio ? " opacity-50" : ""}`}>
               <div className="text-[32px] sm:text-[40px] font-bold text-fg tracking-tight leading-tight line-clamp-2">
-                {displayRadio.displayName}
+                {streamError && !tuner.previewRadio ? "—" : displayRadio.displayName}
               </div>
               <div className="text-base sm:text-xl text-fg-muted font-medium tracking-widest">
                 {displayRadio.band} {displayRadio.frequency}
