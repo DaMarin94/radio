@@ -57,9 +57,9 @@ function App() {
         </div>
         {displayRadio && (
           <div className={`flex flex-col items-center gap-2.5 transition-opacity${tuner.previewRadio ? " opacity-50" : ""}`}>
-            <div className="text-[40px] font-bold text-fg text-center tracking-tight leading-tight">
+            {/* <div className="text-[40px] font-bold text-fg text-center tracking-tight leading-tight">
               {displayRadio.name}
-            </div>
+            </div> */}
             <div className="text-xl text-fg-muted font-medium tracking-widest">
               {displayRadio.band} {displayRadio.frequency}
             </div>
