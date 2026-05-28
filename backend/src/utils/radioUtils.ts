@@ -1,9 +1,50 @@
+export function formatDisplayName(name: string, band: "AM" | "FM" | null, frequency: string): string {
+  const clean = name.trim().replace(/\s+/g, " ");
+
+  const sanitize = (s: string) =>
+    s
+      .replace(/\s*\([^)]*\)/g, "")
+      .replace(/^[\s\-–—()/|.,]+|[\s\-–—()/|.,]+$/g, "")
+      .trim();
+
+  // Band-first pattern wins to avoid cutting names like "La 100 FM 100.1"
+  let match = clean.match(/\s*(?:FM|AM)\s*\d{2,4}(?:[.,]\d)?/i);
+  if (!match || match.index === undefined) {
+    match = clean.match(/\s*\d{2,4}(?:[.,]\d)?\s*(?:FM|AM)/i);
+  }
+
+  let base: string;
+
+  const stripDescriptor = (s: string) => sanitize(s.replace(/\s+[-–—]\s+.*$/, "")) || sanitize(s);
+
+  if (match && match.index !== undefined) {
+    const left = stripDescriptor(clean.slice(0, match.index));
+    const right = stripDescriptor(clean.slice(match.index + match[0].length));
+    base = left || right || stripDescriptor(clean) || clean;
+  } else {
+    const stripped = clean
+      .replace(/\s+[-–—]\s+.*$/, "")
+      .replace(/\b(?:FM|AM)\b/gi, " ")
+      .replace(/\s+\d{2,4}(?:[.,]\d)?/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    base = sanitize(stripped) || sanitize(clean) || clean;
+  }
+
+  return band ? `${base} ${band} ${frequency}` : base;
+}
+
 export function extractFrequency(
   name: string
-): string | null {
-  const match = name.match(/(\d{2,4}(?:\.\d)?)/);
+): string {
+  // Prefer frequency adjacent to FM/AM over any other number
+  const adjacent =
+    name.match(/(?:FM|AM)\s*(\d{2,4}(?:\.\d)?)/i) ??
+    name.match(/(\d{2,4}(?:\.\d)?)\s*(?:FM|AM)/i);
+  if (adjacent) return adjacent[1]!;
 
-  return match ? match[1]! : null;
+  const match = name.match(/(\d{2,4}(?:\.\d)?)/);
+  return match ? (match[1] ? match[1] : '') : '';
 }
 
 export function detectBand(
@@ -11,8 +52,8 @@ export function detectBand(
 ): "AM" | "FM" | null {
   const upper = name.toUpperCase();
 
-  if (upper.includes("AM")) return "AM";
-  if (upper.includes("FM")) return "FM";
+  if (/\bFM\b/.test(upper)) return "FM";
+  if (/\bAM\b/.test(upper)) return "AM";
 
   const frequency = extractFrequency(name);
 

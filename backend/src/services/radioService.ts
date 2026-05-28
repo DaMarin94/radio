@@ -22,10 +22,15 @@ export type StationsByLocationResult = {
   stations: RadioStation[];
 };
 
+function hasFrequency(station: RadioStation): boolean {
+  return station.frequency !== null && station.band !== null;
+}
+
 function buildStationList(raw: RadioBrowserStation[]): RadioStation[] {
   return raw
     .filter(hasValidStream)
     .map(mapRadioStation)
+    .filter(hasFrequency)
     .filter(removeDuplicateStations)
     .sort(sortByBandAndFrequency);
 }

@@ -13,7 +13,6 @@ function AudioPlayer({ selectedRadio, isTuning }: Props) {
   const staticSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const staticGainRef = useRef<GainNode | null>(null);
 
-  const [isPlaying, setIsPlaying] = useState(false);
   const [audioReady, setAudioReady] = useState(false);
 
   const [volume, setVolume] = useState(() => {
@@ -102,27 +101,12 @@ function AudioPlayer({ selectedRadio, isTuning }: Props) {
     audio.addEventListener("playing", handlePlaying);
 
     audio.src = selectedRadio.streamUrl;
-    audio.play().then(() => setIsPlaying(true)).catch(console.error);
+    audio.play().catch(console.error);
 
     return () => {
       audio.removeEventListener("playing", handlePlaying);
     };
   }, [selectedRadio]);
-
-  async function togglePlayback() {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      try {
-        await audioRef.current.play();
-        setIsPlaying(true);
-      } catch (error) {
-        console.error(error);
-      }
-    }
-  }
 
   return (
     <div className="flex flex-row-reverse items-center gap-3">
@@ -151,17 +135,6 @@ function AudioPlayer({ selectedRadio, isTuning }: Props) {
         )}
       </button>
 
-      <button className={styles.button} onClick={togglePlayback}>
-        {isPlaying ? (
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
-          </svg>
-        ) : (
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-            <path d="M8 5v14l11-7z"/>
-          </svg>
-        )}
-      </button>
     </div>
   );
 }

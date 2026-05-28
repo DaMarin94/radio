@@ -1,6 +1,7 @@
 export type RadioStation = {
   id: string;
   name: string;
+  displayName: string;
   streamUrl: string;
 
   favicon: string | null;
@@ -49,5 +50,6 @@ export type RadioBrowserStation = {
   geo_lat?: string | null;
   geo_long?: string | null;
 
+  frequency?: string;
   clickcount?: number;
 };

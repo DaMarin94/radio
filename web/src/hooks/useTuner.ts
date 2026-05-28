@@ -46,7 +46,7 @@ export function useTuner() {
   );
 
   useEffect(() => {
-    document.title = selectedRadio ? `${selectedRadio.name} — Radio` : "Radio";
+    document.title = selectedRadio ? `${selectedRadio.displayName} — Radio` : "Radio";
     if (!selectedRadio) return;
     localStorage.setItem(`selectedRadio-${band}`, selectedRadio.id);
   }, [selectedRadio, band]);

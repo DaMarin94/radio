@@ -13,7 +13,7 @@ type Props = {
 
 const SCALES = {
   FM: { min: 76, max: 108, step: 0.1, precision: 10 },
-  AM: { min: 530, max: 1700, step: 10, precision: 1 },
+  AM: { min: 530, max: 1700, step: 1, precision: 1 },
 } as const;
 
 // Vertical layout
@@ -25,12 +25,17 @@ const V_CENTER_Y = V_CONTAINER_H / 2;
 
 // Horizontal layout
 const H_ITEM_W = 12;
-const H_HALF_RENDER = 22;
+
 const H_CONTAINER_W = 400; // max/initial width
-const TICK_BASELINE = 42;
+const TICK_BASELINE = 54;  // FM ticks hang from here
 const TICK_LARGE = 24;
 const TICK_MEDIUM = 16;
 const TICK_SMALL = 8;
+const FM_LABEL_TOP = 12;   // FM numbers above the ticks
+const TOTAL_DRUM_W = 320 * H_ITEM_W; // FM steps × px — unified norm space
+const AM_ITEM_W = TOTAL_DRUM_W / 1170; // AM steps = (1700-530)/1 — same visual density as FM
+const AM_TICK_TOP = 66;
+const AM_LABEL_TOP = 94;
 
 function snap(val: number, precision: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(val * precision) / precision));
@@ -75,7 +80,9 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
     return () => ro.disconnect();
   }, [orientation]);
 
-  const ITEM_SIZE = orientation === "horizontal" ? H_ITEM_W : ITEM_H;
+  const ITEM_SIZE = orientation === "horizontal"
+    ? (band === "AM" ? AM_ITEM_W : H_ITEM_W)
+    : ITEM_H;
   const liveK = Math.round(-dragOffset / ITEM_SIZE);
   const liveValue = snap(startValueRef.current + liveK * step, precision, min, max);
 
@@ -131,36 +138,76 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
     const R = containerW * 0.45; // cylinder radius — controls edge compression
     const ticks: React.ReactNode[] = [];
 
-    for (let k = liveK - H_HALF_RENDER; k <= liveK + H_HALF_RENDER; k++) {
-      const rawFreq = startValueRef.current + k * step;
-      if (rawFreq < min - 1e-9 || rawFreq > max + 1e-9) continue;
-      const freq = snap(rawFreq, precision, min, max);
-      const linearOffset = k * H_ITEM_W + dragOffset;
-      const xPos = centerX + R * Math.sin(linearOffset / R);
+    // Continuous normalised position — derived from raw dragOffset, not snapped liveK
+    // This keeps the visual fluid; liveK/liveValue handle snap for onChange callbacks
+    const startPos = band === "FM"
+      ? (startValueRef.current - 76) / 32
+      : (startValueRef.current - 530) / 1170;
+    const livePos = Math.max(0, Math.min(1, startPos - dragOffset / TOTAL_DRUM_W));
+
+    // ── FM ticks (top row) — always use FM scale via livePos ─────────────────
+    const fmCenter = 76 + livePos * 32;
+    const fmVisHalf = (containerW * 0.8 / TOTAL_DRUM_W) * 32 + 0.5;
+    const fmStart = Math.ceil((fmCenter - fmVisHalf) * 10) / 10;
+    const fmEnd   = Math.floor((fmCenter + fmVisHalf) * 10) / 10;
+
+    for (let f = fmStart; f <= fmEnd + 0.05; f = Math.round((f + 0.1) * 10) / 10) {
+      if (f < 76 || f > 108) continue;
+      const freq = snap(f, 10, 76, 108);
+      const norm = (freq - 76) / 32;
+      const xLinear = (norm - livePos) * TOTAL_DRUM_W;
+      const xPos = centerX + R * Math.sin(xLinear / R);
       if (xPos < -H_ITEM_W * 2 || xPos > containerW + H_ITEM_W * 2) continue;
 
-      const label = isLabelFreq(freq, band);
-      const medium = !label && isMediumFreq(freq, band);
+      const label = isLabelFreq(freq, "FM");
+      const medium = !label && isMediumFreq(freq, "FM");
       const tickH = label ? TICK_LARGE : medium ? TICK_MEDIUM : TICK_SMALL;
       const dist = Math.abs(xPos - centerX) / H_ITEM_W;
-      const opacity = Math.max(0.12, 1 - dist * 0.045);
+      const base = Math.max(0.12, 1 - dist * 0.045);
+      const opacity = band === "FM" ? base : base * 0.4;
 
       ticks.push(
-        <div
-          key={`t-${k}`}
-          className={styles.tick}
-          style={{ left: xPos - 1, top: TICK_BASELINE - tickH, height: tickH, opacity }}
-        />
+        <div key={`fm-t-${f.toFixed(1)}`} className={styles.tick}
+          style={{ left: xPos - 1, top: TICK_BASELINE - tickH, height: tickH, opacity }} />
       );
-
       if (label) {
         ticks.push(
-          <div
-            key={`l-${k}`}
-            className={styles.tickLabel}
-            style={{ left: xPos, opacity }}
-          >
-            {band === "FM" ? Math.round(freq) : freq}
+          <div key={`fm-l-${f.toFixed(1)}`} className={styles.tickLabel} style={{ left: xPos, top: FM_LABEL_TOP, opacity }}>
+            {Math.round(freq)}
+          </div>
+        );
+      }
+    }
+
+    // ── AM ticks (bottom row) ───────────────────────────────────────────────
+    const amCenter = 530 + livePos * 1170;
+    const amVisHalf = (containerW * 0.8 / TOTAL_DRUM_W) * 1170 + 20;
+    const amStart = Math.ceil((amCenter - amVisHalf) / 10) * 10;
+    const amEnd = Math.floor((amCenter + amVisHalf) / 10) * 10;
+
+    for (let f = amStart; f <= amEnd; f += 10) {
+      if (f < 530 || f > 1700) continue;
+      const norm = (f - 530) / 1170;
+      const xLinear = (norm - livePos) * TOTAL_DRUM_W;
+      const xPos = centerX + R * Math.sin(xLinear / R);
+      if (xPos < -H_ITEM_W * 2 || xPos > containerW + H_ITEM_W * 2) continue;
+
+      const label = f % 100 === 0;
+      const medium = !label && f % 50 === 0;
+      const tickH = label ? TICK_LARGE : medium ? TICK_MEDIUM : TICK_SMALL;
+      const dist = Math.abs(xPos - centerX) / H_ITEM_W;
+      const base = Math.max(0.12, 1 - dist * 0.045);
+      const opacity = band === "AM" ? base : base * 0.4;
+
+      ticks.push(
+        <div key={`am-t-${f}`} className={styles.tick}
+          style={{ left: xPos - 1, top: AM_TICK_TOP, height: tickH, opacity }} />
+      );
+      if (label) {
+        ticks.push(
+          <div key={`am-l-${f}`} className={styles.tickLabel}
+            style={{ left: xPos, top: AM_LABEL_TOP, opacity }}>
+            {f}
           </div>
         );
       }
@@ -176,6 +223,7 @@ function TunerWheel({ band, value, onChange, onRelease, orientation = "horizonta
         onPointerCancel={handlePointerUp}
       >
         {ticks}
+        <div className={styles.divider} />
         <div className={styles.needle} />
       </div>
     );

@@ -1,6 +1,7 @@
 export type RadioStation = {
   id: string;
   name: string;
+  displayName: string;
   streamUrl: string;
 
   favicon?: string | null;

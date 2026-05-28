@@ -4,7 +4,6 @@ import TunerWheel from "./components/TunerWheel";
 import AudioPlayer from "./components/AudioPlayer";
 import BandSwitch from "./components/BandSwitch";
 import { useTuner } from "./hooks/useTuner";
-import { stripStationName } from "./helpers/stripStationName";
 
 function App() {
   const tuner = useTuner();
@@ -20,14 +19,10 @@ function App() {
 
   return (
     <div className="flex flex-col w-full min-h-screen p-5 box-border">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center mb-5">
+      <div className="flex items-center justify-between mb-5">
         <BandSwitch value={tuner.band} onChange={tuner.changeBand} />
 
-        <div className="text-center text-sm font-semibold text-fg-muted truncate px-3">
-          {tuner.selectedRadio ? stripStationName(tuner.selectedRadio.name) : null}
-        </div>
-
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center gap-3">
           <AudioPlayer selectedRadio={tuner.selectedRadio} isTuning={tuner.isTuning} />
           <button
             onClick={() => setTheme(t => t === "retro" ? "" : "retro")}
@@ -54,11 +49,11 @@ function App() {
             onRelease={tuner.handleFrequencyRelease}
           />
         </div>
-        <div className="mt-4 min-h-[108px] flex flex-col items-center justify-start w-full px-4">
+        <div className="mt-4 min-h-27 flex flex-col items-center justify-start w-full px-4">
           {displayRadio && (
             <div className={`flex flex-col items-center gap-1 text-center transition-opacity${tuner.previewRadio ? " opacity-50" : ""}`}>
               <div className="text-[32px] sm:text-[40px] font-bold text-fg tracking-tight leading-tight line-clamp-2">
-                {stripStationName(displayRadio.name)}
+                {displayRadio.displayName}
               </div>
               <div className="text-base sm:text-xl text-fg-muted font-medium tracking-widest">
                 {displayRadio.band} {displayRadio.frequency}

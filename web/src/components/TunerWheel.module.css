@@ -75,7 +75,7 @@
 .drumH {
   position: relative;
   width: min(400px, 100%);
-  height: 72px;
+  height: 120px;
   overflow: hidden;
   cursor: grab;
   user-select: none;
@@ -113,7 +113,6 @@
 
 .tickLabel {
   position: absolute;
-  top: 48px;
   transform: translateX(-50%);
   font-size: 11px;
   font-weight: 500;
@@ -126,8 +125,8 @@
 
 .needle {
   position: absolute;
-  top: 8px;
-  bottom: 20px;
+  top: 6px;
+  bottom: 6px;
   left: 50%;
   width: 2px;
   transform: translateX(-50%);
@@ -136,6 +135,18 @@
   border-radius: 1px;
   pointer-events: none;
 }
+
+.divider {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 62px;
+  height: 1px;
+  background: var(--text-secondary);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
 
 
 /* ── Default theme overrides ─────────────────────────────────────────────── */
