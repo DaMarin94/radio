@@ -105,7 +105,7 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
       onPointerLeave={isMobile ? undefined : close}
     >
       {/* Main trigger */}
-      <button className={`${btnBase} text-fg`} style={size}>
+      <button className={`${btnBase} text-fg`} style={size} aria-label={`Tema activo: ${active}. Cambiar tema`} aria-expanded={isOpen}>
         {active}
       </button>
 
@@ -123,6 +123,7 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
             onPointerEnter={isMobile ? undefined : () => { setHovered(t); onPreview(t); }}
             onPointerLeave={isMobile ? undefined : () => { setHovered(null); onPreview(null); }}
             onClick={isMobile ? undefined : () => handleConfirm(t)}
+            aria-label={`Tema ${t}`}
           >
             {t}
           </button>
@@ -143,6 +144,7 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
             onPointerEnter={isMobile ? undefined : () => { setHovered(t); onPreview(t); }}
             onPointerLeave={isMobile ? undefined : () => { setHovered(null); onPreview(null); }}
             onClick={isMobile ? undefined : () => handleConfirm(t)}
+            aria-label={`Tema ${t}`}
           >
             {t}
           </button>

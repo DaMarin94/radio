@@ -12,6 +12,7 @@ function BandSwitch({ value, onChange }: Props) {
       checked={value === "FM"}
       onCheckedChange={(checked) => onChange(checked ? "FM" : "AM")}
       className={styles.root}
+      aria-label={`Banda ${value}, cambiar a ${value === "FM" ? "AM" : "FM"}`}
     >
       <span className={`${styles.label} ${value === "AM" ? styles.active : styles.inactive}`}>
         AM
