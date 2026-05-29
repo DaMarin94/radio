@@ -54,6 +54,8 @@ cd backend && npm run build
 4. Commit recién después del OK
 5. Proponer el push — **esperar aprobación** antes de pushear a origin
 
+**IMPORTANTE:** commit y push son dos aprobaciones separadas e independientes. Nunca pushear automáticamente después de un commit, aunque el usuario haya aprobado el commit. Esperar un OK explícito para el push. La única excepción es cuando el usuario dice explícitamente "commitea y pusheá" en el mismo mensaje.
+
 ## Decisiones de diseño importantes
 
 - **No es una lista de radios** — es un tuner con dial físico. No agregar UI tipo playlist/lista.
