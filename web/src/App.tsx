@@ -8,7 +8,7 @@ import { useTuner } from "./hooks/useTuner";
 function App() {
   const tuner = useTuner();
 
-  const THEMES = ["digital", "dark", "amber", "blue", "light", "warm"] as const;
+  const THEMES = ["dark", "light", "digital", "amber", "warm", "blue"] as const;
   type Theme = typeof THEMES[number];
   const THEME_LABELS: Record<Theme, string> = { digital: "digital", dark: "dark", amber: "amber", blue: "blue", light: "light", warm: "warm" };
 
