@@ -1,20 +1,24 @@
 import { useEffect, useRef, useState } from "react";
 import type { RadioStation } from "../types/radioStation";
+import { useDevice } from "../context/DeviceContext";
 import styles from "./AudioPlayer.module.css";
 
 type Props = {
   selectedRadio: RadioStation | null;
   isTuning: boolean;
   onError?: () => void;
+  onBufferingChange?: (buffering: boolean) => void;
 };
 
-function AudioPlayer({ selectedRadio, isTuning, onError }: Props) {
+function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange }: Props) {
+  const { isMobile } = useDevice();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const staticSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const staticGainRef = useRef<GainNode | null>(null);
 
   const [audioReady, setAudioReady] = useState(false);
+  const [streamFailed, setStreamFailed] = useState(false);
 
   const [volume, setVolume] = useState(() => {
     const saved = localStorage.getItem("player-volume");
@@ -24,6 +28,12 @@ function AudioPlayer({ selectedRadio, isTuning, onError }: Props) {
 
   const volumeRef = useRef(volume);
   volumeRef.current = volume;
+
+  const isBuffering = selectedRadio !== null && !audioReady && !isTuning && !streamFailed;
+
+  useEffect(() => {
+    onBufferingChange?.(isBuffering);
+  }, [isBuffering, onBufferingChange]);
 
   const shouldPlayStatic = !isMuted && (isTuning || (selectedRadio !== null && !audioReady));
 
@@ -93,11 +103,12 @@ function AudioPlayer({ selectedRadio, isTuning, onError }: Props) {
 
   useEffect(() => {
     setAudioReady(false);
+    setStreamFailed(false);
     if (!audioRef.current || !selectedRadio) return;
 
     const audio = audioRef.current;
     const handlePlaying = () => setAudioReady(true);
-    const handleError = () => onError?.();
+    const handleError = () => { setStreamFailed(true); onError?.(); };
     audio.addEventListener("playing", handlePlaying);
     audio.addEventListener("error", handleError);
 
@@ -105,6 +116,7 @@ function AudioPlayer({ selectedRadio, isTuning, onError }: Props) {
     audio.play().catch((err: DOMException) => {
       if (err.name === "AbortError" || err.name === "NotAllowedError") return;
       console.error(err);
+      setStreamFailed(true);
       onError?.();
     });
 
@@ -118,16 +130,18 @@ function AudioPlayer({ selectedRadio, isTuning, onError }: Props) {
     <div className="flex flex-row-reverse items-center gap-3">
       <audio ref={audioRef} hidden />
 
-      <input
-        type="range"
-        min={0}
-        max={1}
-        step={0.01}
-        value={volume}
-        onChange={(e) => setVolume(Number(e.target.value))}
-        className={styles.slider}
-        style={{ "--volume": `${volume * 100}%` } as React.CSSProperties}
-      />
+      {!isMobile && (
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.01}
+          value={volume}
+          onChange={(e) => setVolume(Number(e.target.value))}
+          className={styles.slider}
+          style={{ "--volume": `${volume * 100}%` } as React.CSSProperties}
+        />
+      )}
 
       <button className={styles.button} onClick={() => setIsMuted((p) => !p)}>
         {isMuted ? (

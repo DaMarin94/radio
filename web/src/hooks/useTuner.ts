@@ -17,6 +17,7 @@ export function useTuner() {
     return localStorage.getItem("bandFilter") === "AM" ? "AM" : "FM";
   });
   const [previewRadio, setPreviewRadio] = useState<RadioStation | null>(null);
+  const [isLoadingRadios, setIsLoadingRadios] = useState(true);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -27,8 +28,8 @@ export function useTuner() {
 
   useEffect(() => {
     api.get("/radios/buenos-aires")
-      .then((res) => setRadios(res.data))
-      .catch(console.error);
+      .then((res) => { setRadios(res.data); setIsLoadingRadios(false); })
+      .catch((err) => { console.error(err); setIsLoadingRadios(false); });
   }, []);
 
   useEffect(() => {
@@ -82,14 +83,6 @@ export function useTuner() {
       : Math.min(1700, Math.max(530, Math.round(530 + pos * 1170)));
     setFrequency(newFreq);
 
-    const savedId = localStorage.getItem(`selectedRadio-${nextBand}`);
-    if (savedId) {
-      const saved = radios.find((r) => r.id === savedId);
-      if (saved) {
-        setSelectedRadio(saved);
-        return;
-      }
-    }
     const nextBandRadios = radios.filter((r) => r.band === nextBand);
     const closest = resolveStationByTuning(newFreq, nextBandRadios);
     setSelectedRadio(closest);
@@ -101,6 +94,7 @@ export function useTuner() {
     selectedRadio,
     previewRadio,
     isTuning: previewRadio !== null,
+    isLoadingRadios,
     handleFrequencyChange,
     handleFrequencyRelease,
     changeBand,

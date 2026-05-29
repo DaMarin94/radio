@@ -33,16 +33,6 @@
   border: none;
 }
 
-@media (hover: none) {
-  .slider::-webkit-slider-thumb {
-    width: 24px;
-    height: 24px;
-  }
-  .slider::-moz-range-thumb {
-    width: 24px;
-    height: 24px;
-  }
-}
 
 .button {
   width: var(--button-size);

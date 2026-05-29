@@ -6,7 +6,7 @@
   --text: #ffffff;
   --text-secondary: #83743f;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  --button-size: 40px;
+  --button-size: 48px;
   --player-gap: 12px;
   --needle: var(--text-secondary);
   --track-hi: #444;

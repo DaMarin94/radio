@@ -4,6 +4,7 @@ import TunerWheel from "./components/TunerWheel";
 import AudioPlayer from "./components/AudioPlayer";
 import BandSwitch from "./components/BandSwitch";
 import ThemePicker, { type Theme } from "./components/ThemePicker";
+import LoadingBar from "./components/LoadingBar";
 import { useTuner } from "./hooks/useTuner";
 
 function App() {
@@ -27,6 +28,14 @@ function App() {
   };
 
   const [streamError, setStreamError] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+
+  const isLoading = tuner.isLoadingRadios || isBuffering;
+  const loadingMessage = tuner.isLoadingRadios
+    ? "Listando radios..."
+    : isBuffering
+      ? "Buffering..."
+      : null;
 
   useEffect(() => { setStreamError(false); }, [tuner.selectedRadio]);
 
@@ -34,18 +43,22 @@ function App() {
 
   return (
     <div className="flex flex-col w-full min-h-dvh p-5 box-border select-none">
-      <div className="mb-5">
-        <div className="flex items-center justify-between">
-          <BandSwitch value={tuner.band} onChange={tuner.changeBand} />
-          <AudioPlayer selectedRadio={tuner.selectedRadio} isTuning={tuner.isTuning} onError={() => setStreamError(true)} />
+      <LoadingBar isLoading={isLoading} />
+      {loadingMessage && (
+        <div className="fixed bottom-16 left-0 right-0 flex justify-center pointer-events-none">
+          <p className="text-sm text-fg-muted tracking-widest uppercase animate-pulse">
+            {loadingMessage}
+          </p>
         </div>
-        <div className="flex justify-end mt-2">
-          <ThemePicker
-            active={activeTheme}
-            onPreview={setPreviewTheme}
-            onConfirm={handleConfirm}
-          />
-        </div>
+      )}
+      <div className="flex items-center justify-between mb-5">
+        <BandSwitch value={tuner.band} onChange={tuner.changeBand} />
+        <AudioPlayer
+          selectedRadio={tuner.selectedRadio}
+          isTuning={tuner.isTuning}
+          onError={() => setStreamError(true)}
+          onBufferingChange={setIsBuffering}
+        />
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-center md:px-[10%]">
@@ -77,6 +90,13 @@ function App() {
         </div>
       </div>
 
+      <div className="flex justify-end pt-2">
+        <ThemePicker
+          active={activeTheme}
+          onPreview={setPreviewTheme}
+          onConfirm={handleConfirm}
+        />
+      </div>
     </div>
   );
 }

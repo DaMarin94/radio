@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { useDevice } from "../context/DeviceContext";
 
 const THEMES_LEFT = ["dark", "light"] as const;
-const THEMES_DOWN = ["digital", "amber", "warm", "blue"] as const;
+const THEMES_UP = ["blue", "warm", "amber", "digital"] as const;
 
-export type Theme = typeof THEMES_LEFT[number] | typeof THEMES_DOWN[number];
+export type Theme = typeof THEMES_LEFT[number] | typeof THEMES_UP[number];
 
 const THEME_COLORS: Record<Theme, string> = {
   dark:    "#ffffff",
@@ -21,64 +22,53 @@ interface Props {
 }
 
 export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
+  const { isMobile } = useDevice();
   const [isOpen, setIsOpen] = useState(false);
   const [hovered, setHovered] = useState<Theme | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const gestureActiveRef = useRef(false);
 
-  // Close on touch outside
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleOutside = (e: PointerEvent) => {
-      if (e.pointerType !== "touch") return;
-      if (!containerRef.current?.contains(e.target as Node)) {
-        setIsOpen(false);
-        setHovered(null);
-        onPreview(null);
-      }
-    };
-    document.addEventListener("pointerdown", handleOutside);
-    return () => document.removeEventListener("pointerdown", handleOutside);
-  }, [isOpen, onPreview]);
-
-  // Desktop hover handlers (mouse only)
-  const handleMouseOpen = (e: React.PointerEvent) => {
-    if (e.pointerType === "mouse") setIsOpen(true);
-  };
-  const handleMouseClose = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse") return;
+  const close = () => {
     setIsOpen(false);
-    setHovered(null);
-    onPreview(null);
-  };
-
-  // Touch toggle on main button
-  const handleMainPointerDown = (e: React.PointerEvent) => {
-    if (e.pointerType !== "touch") return;
-    if (isOpen) {
-      setIsOpen(false);
-      setHovered(null);
-      onPreview(null);
-    } else {
-      setIsOpen(true);
-    }
-  };
-
-  // Icon hover (mouse only)
-  const handleIconEnter = (e: React.PointerEvent, t: Theme) => {
-    if (e.pointerType !== "mouse") return;
-    setHovered(t);
-    onPreview(t);
-  };
-  const handleIconLeave = (e: React.PointerEvent) => {
-    if (e.pointerType !== "mouse") return;
     setHovered(null);
     onPreview(null);
   };
 
   const handleConfirm = (t: Theme) => {
     onConfirm(t);
-    setIsOpen(false);
-    setHovered(null);
+    close();
+  };
+
+  // Mobile: one continuous gesture — press opens, drag previews, lift confirms or cancels
+  const handleMobilePointerDown = (e: React.PointerEvent) => {
+    e.preventDefault();
+    gestureActiveRef.current = true;
+    setIsOpen(true);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handleMobilePointerMove = (e: React.PointerEvent) => {
+    if (!gestureActiveRef.current) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const btn = el?.closest("[data-theme]") as HTMLElement | null;
+    const t = (btn?.dataset.theme as Theme) ?? null;
+    setHovered(t);
+    onPreview(t);
+  };
+
+  const handleMobilePointerUp = (e: React.PointerEvent) => {
+    if (!gestureActiveRef.current) return;
+    gestureActiveRef.current = false;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const btn = el?.closest("[data-theme]") as HTMLElement | null;
+    const t = btn?.dataset.theme as Theme | undefined;
+    if (t) handleConfirm(t);
+    else close();
+  };
+
+  const handleMobilePointerCancel = () => {
+    gestureActiveRef.current = false;
+    close();
   };
 
   const btnBase =
@@ -95,9 +85,9 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
     pointerEvents: isOpen ? "auto" : "none",
   };
 
-  const downStyle: React.CSSProperties = {
+  const upStyle: React.CSSProperties = {
     opacity: isOpen ? 1 : 0,
-    transform: isOpen ? "translateY(0)" : "translateY(-8px)",
+    transform: isOpen ? "translateY(0)" : "translateY(8px)",
     transition: "opacity 120ms ease-out, transform 120ms ease-out",
     pointerEvents: isOpen ? "auto" : "none",
   };
@@ -106,15 +96,15 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
     <div
       ref={containerRef}
       className="relative z-10"
-      onPointerEnter={handleMouseOpen}
-      onPointerLeave={handleMouseClose}
+      onPointerDown={isMobile ? handleMobilePointerDown : undefined}
+      onPointerMove={isMobile ? handleMobilePointerMove : undefined}
+      onPointerUp={isMobile ? handleMobilePointerUp : undefined}
+      onPointerCancel={isMobile ? handleMobilePointerCancel : undefined}
+      onPointerEnter={isMobile ? undefined : () => setIsOpen(true)}
+      onPointerLeave={isMobile ? undefined : close}
     >
       {/* Main trigger */}
-      <button
-        className={`${btnBase} text-fg`}
-        style={size}
-        onPointerDown={handleMainPointerDown}
-      >
+      <button className={`${btnBase} text-fg`} style={size}>
         {active}
       </button>
 
@@ -126,30 +116,32 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
         {[...THEMES_LEFT].reverse().map(t => (
           <button
             key={t}
+            data-theme={t}
             className={`${btnBase} text-fg-muted`}
             style={{ ...size, ...(hovered === t ? { color: THEME_COLORS[t] } : {}) }}
-            onPointerEnter={(e) => handleIconEnter(e, t)}
-            onPointerLeave={handleIconLeave}
-            onClick={() => handleConfirm(t)}
+            onPointerEnter={isMobile ? undefined : () => { setHovered(t); onPreview(t); }}
+            onPointerLeave={isMobile ? undefined : () => { setHovered(null); onPreview(null); }}
+            onClick={isMobile ? undefined : () => handleConfirm(t)}
           >
             {t}
           </button>
         ))}
       </div>
 
-      {/* Down arm: [main] ↓ digital ↓ amber ↓ warm ↓ blue */}
+      {/* Up arm: [main] ↑ blue ↑ warm ↑ amber ↑ digital */}
       <div
-        className="absolute top-full right-0 flex flex-col items-center gap-1 pt-1"
-        style={downStyle}
+        className="absolute bottom-full right-0 flex flex-col items-center gap-1 pb-1"
+        style={upStyle}
       >
-        {THEMES_DOWN.map(t => (
+        {THEMES_UP.map(t => (
           <button
             key={t}
+            data-theme={t}
             className={`${btnBase} text-fg-muted`}
             style={{ ...size, ...(hovered === t ? { color: THEME_COLORS[t] } : {}) }}
-            onPointerEnter={(e) => handleIconEnter(e, t)}
-            onPointerLeave={handleIconLeave}
-            onClick={() => handleConfirm(t)}
+            onPointerEnter={isMobile ? undefined : () => { setHovered(t); onPreview(t); }}
+            onPointerLeave={isMobile ? undefined : () => { setHovered(null); onPreview(null); }}
+            onClick={isMobile ? undefined : () => handleConfirm(t)}
           >
             {t}
           </button>

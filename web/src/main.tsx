@@ -8,6 +8,7 @@ import "./themes/blue.css";
 import "./themes/light.css";
 import "./themes/warm.css";
 import App from './App.tsx'
+import { DeviceProvider } from './context/DeviceContext'
 
 document.documentElement.setAttribute(
   "data-theme",
@@ -16,6 +17,8 @@ document.documentElement.setAttribute(
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <DeviceProvider>
+      <App />
+    </DeviceProvider>
   </StrictMode>,
 )
