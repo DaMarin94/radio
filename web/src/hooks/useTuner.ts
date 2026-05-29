@@ -3,6 +3,9 @@ import { api } from "../services/api";
 import type { RadioStation } from "../types/radioStation";
 import { getSavedFrequency } from "../helpers/getSavedFrequency";
 import { resolveStationByTuning } from "../helpers/tuning";
+import { getUserLocation } from "../helpers/location";
+
+type UserLocation = { lat: number; lng: number };
 
 type Band = "AM" | "FM";
 
@@ -18,6 +21,7 @@ export function useTuner() {
   });
   const [previewRadio, setPreviewRadio] = useState<RadioStation | null>(null);
   const [isLoadingRadios, setIsLoadingRadios] = useState(true);
+  const [userLocation, setUserLocation] = useState<UserLocation | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -31,7 +35,11 @@ export function useTuner() {
   }, [frequency]);
 
   useEffect(() => {
-    api.get("/radios/buenos-aires")
+    getUserLocation().then((loc) => {
+      setUserLocation(loc);
+      const params = loc ? { lat: loc.lat, lng: loc.lng } : {};
+      return api.get("/radios/buenos-aires", { params });
+    })
       .then((res) => { setRadios(res.data); setIsLoadingRadios(false); })
       .catch((err) => { console.error(err); setIsLoadingRadios(false); });
   }, []);
@@ -59,23 +67,24 @@ export function useTuner() {
   }, [selectedRadio, band]);
 
   function handleFrequencyChange(value: number) {
-    const closest = resolveStationByTuning(value, filteredRadios);
+    const closest = resolveStationByTuning(value, filteredRadios, userLocation);
     setPreviewRadio(closest);
     setFrequency(value);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      const fresh = resolveStationByTuning(value, filteredRadiosRef.current);
+      const fresh = resolveStationByTuning(value, filteredRadiosRef.current, userLocation);
       if (fresh) setSelectedRadio(fresh);
     }, 300);
   }
 
   function handleFrequencyRelease(value: number) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    const station = resolveStationByTuning(value, filteredRadios);
+    const station = resolveStationByTuning(value, filteredRadios, userLocation);
     setPreviewRadio(null);
     if (!station) return;
     setSelectedRadio(station);
+    api.post(`/radios/click/${station.id}`).catch(() => {});
   }
 
   function changeBand(nextBand: Band) {
@@ -91,7 +100,7 @@ export function useTuner() {
     setFrequency(newFreq);
 
     const nextBandRadios = radios.filter((r) => r.band === nextBand);
-    const closest = resolveStationByTuning(newFreq, nextBandRadios);
+    const closest = resolveStationByTuning(newFreq, nextBandRadios, userLocation);
     setSelectedRadio(closest);
   }
 

@@ -3,13 +3,18 @@ import {
   getBuenosAiresStations,
   getNearbyStations,
   getStationsByLocation,
+  registerClick,
 } from "../services/radioService";
 
 const router = Router();
 
-router.get("/buenos-aires", async (_: Request, res: Response) => {
+router.get("/buenos-aires", async (req: Request, res: Response) => {
+  const { lat, lng } = req.query;
+  const userLat = lat ? parseFloat(lat as string) : undefined;
+  const userLng = lng ? parseFloat(lng as string) : undefined;
+
   try {
-    const radios = await getBuenosAiresStations();
+    const radios = await getBuenosAiresStations(userLat, userLng);
     res.json(radios);
   } catch (error) {
     console.error(error);
@@ -55,6 +60,23 @@ router.get("/by-location", async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch stations by location" });
+  }
+});
+
+router.post("/click/:id", async (req: Request, res: Response) => {
+  const id = Array.isArray(req.params["id"]) ? req.params["id"][0] : req.params["id"];
+
+  if (!id) {
+    res.status(400).json({ error: "Station id is required" });
+    return;
+  }
+
+  try {
+    await registerClick(id);
+    res.status(204).end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to register click" });
   }
 });
 

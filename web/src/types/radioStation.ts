@@ -22,6 +22,7 @@ export type RadioStation = {
   lng?: number | null;
 
   clickcount?: number;
+  votes?: number;
 };
 
 export type TuningMode = "CONTINUOUS" | "SNAP";

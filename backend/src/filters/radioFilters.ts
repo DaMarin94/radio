@@ -5,9 +5,16 @@ import {
 } from "../models/radioStation";
 import { getDistanceKm } from "../utils/radioUtils";
 
+// AR-B = Buenos Aires province, AR-C = CABA
+const BA_ISO_CODES = new Set(["AR-B", "AR-C"]);
+
 export function isBuenosAiresStation(
   station: RadioBrowserStation
 ): boolean {
+  if (station.iso_3166_2) {
+    return BA_ISO_CODES.has(station.iso_3166_2);
+  }
+
   const state = station.state?.toLowerCase() || "";
 
   // Include stations with no state — Radio Browser often lacks subdivision
@@ -21,7 +28,7 @@ export function isBuenosAiresStation(
 export function hasValidStream(
   station: RadioBrowserStation
 ): boolean {
-  return Boolean(station.name && station.url_resolved);
+  return Boolean(station.name && station.url_resolved) && station.lastcheckok !== 0;
 }
 
 export function filterNearby(
@@ -42,6 +49,19 @@ export function filterNearby(
 
     return distance <= radiusKm;
   });
+}
+
+const ANTENNA_RANGE_KM: Record<"AM" | "FM", number> = { FM: 50, AM: 500 };
+
+export function isWithinAntennaRange(
+  station: RadioStation,
+  userLat: number,
+  userLng: number
+): boolean {
+  if (station.lat === null || station.lng === null) return true;
+  if (station.band === null) return true;
+  const distance = getDistanceKm(userLat, userLng, station.lat, station.lng);
+  return distance <= ANTENNA_RANGE_KM[station.band];
 }
 
 export function stationMatchesLocation(

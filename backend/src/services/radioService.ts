@@ -1,4 +1,5 @@
 import {
+  clickStation as clickStationOnBrowser,
   getArgentinaStations,
   getStationsNear,
   getStationsByCountry,
@@ -9,6 +10,7 @@ import { reverseGeocode } from "../providers/nominatim";
 import {
   hasValidStream,
   isBuenosAiresStation,
+  isWithinAntennaRange,
   stationMatchesLocation,
 } from "../filters/radioFilters";
 
@@ -33,9 +35,18 @@ function buildStationList(raw: RadioBrowserStation[]): RadioStation[] {
     .sort(sortByBandAndFrequency);
 }
 
-export async function getBuenosAiresStations(): Promise<RadioStation[]> {
+export async function getBuenosAiresStations(
+  userLat?: number,
+  userLng?: number
+): Promise<RadioStation[]> {
   const raw = await getArgentinaStations();
-  return buildStationList(raw.filter(isBuenosAiresStation));
+  const stations = buildStationList(raw.filter(isBuenosAiresStation));
+
+  if (userLat !== undefined && userLng !== undefined) {
+    return stations.filter((s) => isWithinAntennaRange(s, userLat, userLng));
+  }
+
+  return stations;
 }
 
 export async function getNearbyStations(
@@ -68,4 +79,8 @@ export async function getStationsByLocation(
   const stations = local.length >= 3 ? local : all;
 
   return { location, stations };
+}
+
+export async function registerClick(uuid: string): Promise<void> {
+  await clickStationOnBrowser(uuid);
 }

@@ -47,5 +47,6 @@ export function mapRadioStation(
     lng: station.geo_long ? parseFloat(station.geo_long) : null,
 
     clickcount: station.clickcount ?? 0,
+    votes: station.votes ?? 0,
   };
 }

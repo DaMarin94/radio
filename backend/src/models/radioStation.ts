@@ -22,6 +22,7 @@ export type RadioStation = {
   lng: number | null;
 
   clickcount: number;
+  votes: number;
 };
 
 export type ReverseGeocodeResult = {
@@ -40,7 +41,9 @@ export type RadioBrowserStation = {
   homepage?: string;
 
   country?: string;
+  countrycode?: string;
   state?: string;
+  iso_3166_2?: string;
 
   tags?: string;
 
@@ -52,4 +55,6 @@ export type RadioBrowserStation = {
 
   frequency?: string;
   clickcount?: number;
+  votes?: number;
+  lastcheckok?: number;
 };

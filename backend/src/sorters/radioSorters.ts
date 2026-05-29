@@ -37,6 +37,9 @@ export function sortByBandAndFrequency(
     return freqDiff;
   }
 
-  // Same frequency: prefer the more popular station
+  // Same frequency: prefer the more voted station, then the more clicked
+  const voteDiff = (b.votes ?? 0) - (a.votes ?? 0);
+  if (voteDiff !== 0) return voteDiff;
+
   return (b.clickcount ?? 0) - (a.clickcount ?? 0);
 }
