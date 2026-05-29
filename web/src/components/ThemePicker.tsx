@@ -96,6 +96,7 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
     <div
       ref={containerRef}
       className="relative z-10"
+      style={isMobile ? { touchAction: "none" } : undefined}
       onPointerDown={isMobile ? handleMobilePointerDown : undefined}
       onPointerMove={isMobile ? handleMobilePointerMove : undefined}
       onPointerUp={isMobile ? handleMobilePointerUp : undefined}
