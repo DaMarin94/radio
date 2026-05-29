@@ -9,6 +9,7 @@
   padding: 4px;
   border: none;
   cursor: pointer;
+  -webkit-user-select: none;
   user-select: none;
   box-sizing: border-box;
 }

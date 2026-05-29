@@ -33,7 +33,7 @@ function App() {
   const displayRadio = tuner.previewRadio ?? tuner.selectedRadio;
 
   return (
-    <div className="flex flex-col w-full min-h-screen p-5 box-border select-none">
+    <div className="flex flex-col w-full min-h-dvh p-5 box-border select-none">
       <div className="mb-5">
         <div className="flex items-center justify-between">
           <BandSwitch value={tuner.band} onChange={tuner.changeBand} />

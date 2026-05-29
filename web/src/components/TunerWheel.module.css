@@ -6,6 +6,7 @@
   height: 150px;
   overflow: hidden;
   cursor: grab;
+  -webkit-user-select: none;
   user-select: none;
   touch-action: none;
   background: var(--panel);

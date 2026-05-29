@@ -38,7 +38,8 @@ function AudioPlayer({ selectedRadio, isTuning, onError }: Props) {
 
     if (!audioCtxRef.current) {
       try {
-        audioCtxRef.current = new AudioContext();
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        audioCtxRef.current = new AudioCtx();
       } catch {
         return;
       }
@@ -102,7 +103,7 @@ function AudioPlayer({ selectedRadio, isTuning, onError }: Props) {
 
     audio.src = selectedRadio.streamUrl;
     audio.play().catch((err: DOMException) => {
-      if (err.name === "AbortError") return;
+      if (err.name === "AbortError" || err.name === "NotAllowedError") return;
       console.error(err);
       onError?.();
     });
