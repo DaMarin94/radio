@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const THEMES_LEFT = ["dark", "light"] as const;
 const THEMES_DOWN = ["digital", "amber", "warm", "blue"] as const;
@@ -23,20 +23,54 @@ interface Props {
 export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [hovered, setHovered] = useState<Theme | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleOpen = () => setIsOpen(true);
-  const handleClose = () => {
+  // Close on touch outside
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleOutside = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      if (!containerRef.current?.contains(e.target as Node)) {
+        setIsOpen(false);
+        setHovered(null);
+        onPreview(null);
+      }
+    };
+    document.addEventListener("pointerdown", handleOutside);
+    return () => document.removeEventListener("pointerdown", handleOutside);
+  }, [isOpen, onPreview]);
+
+  // Desktop hover handlers (mouse only)
+  const handleMouseOpen = (e: React.PointerEvent) => {
+    if (e.pointerType === "mouse") setIsOpen(true);
+  };
+  const handleMouseClose = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
     setIsOpen(false);
     setHovered(null);
     onPreview(null);
   };
 
-  const handleEnter = (t: Theme) => {
+  // Touch toggle on main button
+  const handleMainPointerDown = (e: React.PointerEvent) => {
+    if (e.pointerType !== "touch") return;
+    if (isOpen) {
+      setIsOpen(false);
+      setHovered(null);
+      onPreview(null);
+    } else {
+      setIsOpen(true);
+    }
+  };
+
+  // Icon hover (mouse only)
+  const handleIconEnter = (e: React.PointerEvent, t: Theme) => {
+    if (e.pointerType !== "mouse") return;
     setHovered(t);
     onPreview(t);
   };
-
-  const handleLeaveBtn = () => {
+  const handleIconLeave = (e: React.PointerEvent) => {
+    if (e.pointerType !== "mouse") return;
     setHovered(null);
     onPreview(null);
   };
@@ -69,9 +103,18 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
   };
 
   return (
-    <div className="relative z-10" onMouseEnter={handleOpen} onMouseLeave={handleClose}>
+    <div
+      ref={containerRef}
+      className="relative z-10"
+      onPointerEnter={handleMouseOpen}
+      onPointerLeave={handleMouseClose}
+    >
       {/* Main trigger */}
-      <button className={`${btnBase} text-fg`} style={size}>
+      <button
+        className={`${btnBase} text-fg`}
+        style={size}
+        onPointerDown={handleMainPointerDown}
+      >
         {active}
       </button>
 
@@ -85,8 +128,8 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
             key={t}
             className={`${btnBase} text-fg-muted`}
             style={{ ...size, ...(hovered === t ? { color: THEME_COLORS[t] } : {}) }}
-            onMouseEnter={() => handleEnter(t)}
-            onMouseLeave={handleLeaveBtn}
+            onPointerEnter={(e) => handleIconEnter(e, t)}
+            onPointerLeave={handleIconLeave}
             onClick={() => handleConfirm(t)}
           >
             {t}
@@ -104,8 +147,8 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
             key={t}
             className={`${btnBase} text-fg-muted`}
             style={{ ...size, ...(hovered === t ? { color: THEME_COLORS[t] } : {}) }}
-            onMouseEnter={() => handleEnter(t)}
-            onMouseLeave={handleLeaveBtn}
+            onPointerEnter={(e) => handleIconEnter(e, t)}
+            onPointerLeave={handleIconLeave}
             onClick={() => handleConfirm(t)}
           >
             {t}
