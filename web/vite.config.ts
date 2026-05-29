@@ -13,7 +13,7 @@ export default defineConfig({
       manifest: {
         name: 'Radio',
         short_name: 'Radio',
-        description: 'Sintonizador de radio FM/AM de Buenos Aires',
+        description: 'Sintonizador de radio FM/AM',
         theme_color: '#101010',
         background_color: '#101010',
         display: 'standalone',
