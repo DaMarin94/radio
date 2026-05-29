@@ -24,14 +24,6 @@ export function hasValidStream(
   return Boolean(station.name && station.url_resolved);
 }
 
-export function removeDuplicateStations(
-  station: RadioStation,
-  index: number,
-  self: RadioStation[]
-): boolean {
-  return index === self.findIndex((s) => s.name === station.name);
-}
-
 export function filterNearby(
   stations: RadioStation[],
   userLat: number,

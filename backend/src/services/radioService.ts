@@ -9,7 +9,6 @@ import { reverseGeocode } from "../providers/nominatim";
 import {
   hasValidStream,
   isBuenosAiresStation,
-  removeDuplicateStations,
   stationMatchesLocation,
 } from "../filters/radioFilters";
 
@@ -31,7 +30,6 @@ function buildStationList(raw: RadioBrowserStation[]): RadioStation[] {
     .filter(hasValidStream)
     .map(mapRadioStation)
     .filter(hasFrequency)
-    .filter(removeDuplicateStations)
     .sort(sortByBandAndFrequency);
 }
 
