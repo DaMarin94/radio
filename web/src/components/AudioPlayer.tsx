@@ -72,6 +72,7 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
       if (!needsGestureRef.current || !audioRef.current) return;
       needsGestureRef.current = false;
       onNeedsGesture?.(false);
+      setStreamFailed(false);
       setAudioReady(false);
       audioRef.current.play().catch(() => {});
     };
@@ -156,7 +157,14 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
 
     const audio = audioRef.current;
     const handlePlaying = () => setAudioReady(true);
-    const handleError = () => { setStreamFailed(true); onError?.(); };
+    const handleError = () => {
+      // Aborted = station switched mid-load, not a real error
+      if (audio.error?.code === MediaError.MEDIA_ERR_ABORTED) return;
+      // Pre-gesture errors on mobile are likely preload false positives
+      if (needsGestureRef.current) return;
+      setStreamFailed(true);
+      onError?.();
+    };
     audio.addEventListener("playing", handlePlaying);
     audio.addEventListener("error", handleError);
 

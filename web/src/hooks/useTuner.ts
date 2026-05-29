@@ -49,6 +49,8 @@ export function useTuner() {
     () => radios.filter((r) => r.band === band),
     [radios, band]
   );
+  const filteredRadiosRef = useRef(filteredRadios);
+  filteredRadiosRef.current = filteredRadios;
 
   useEffect(() => {
     document.title = selectedRadio ? `${selectedRadio.displayName} — Radio` : "Radio";
@@ -63,7 +65,8 @@ export function useTuner() {
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      if (closest) setSelectedRadio(closest);
+      const fresh = resolveStationByTuning(value, filteredRadiosRef.current);
+      if (fresh) setSelectedRadio(fresh);
     }, 300);
   }
 
