@@ -1,2 +1,4 @@
 node_modules
 .DS_Store
+# old web/ dir (moved to frontend/web/) may still exist on disk with locked node_modules
+web/
