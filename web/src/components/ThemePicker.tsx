@@ -118,8 +118,8 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
           <button
             key={t}
             data-theme={t}
-            className={`${btnBase} text-fg-muted`}
-            style={{ ...size, ...(hovered === t ? { color: THEME_COLORS[t] } : {}) }}
+            className={btnBase}
+            style={{ ...size, color: THEME_COLORS[t], opacity: hovered === t ? 1 : 0.5 }}
             onPointerEnter={isMobile ? undefined : () => { setHovered(t); onPreview(t); }}
             onPointerLeave={isMobile ? undefined : () => { setHovered(null); onPreview(null); }}
             onClick={isMobile ? undefined : () => handleConfirm(t)}
@@ -139,8 +139,8 @@ export default function ThemePicker({ active, onPreview, onConfirm }: Props) {
           <button
             key={t}
             data-theme={t}
-            className={`${btnBase} text-fg-muted`}
-            style={{ ...size, ...(hovered === t ? { color: THEME_COLORS[t] } : {}) }}
+            className={btnBase}
+            style={{ ...size, color: THEME_COLORS[t], opacity: hovered === t ? 1 : 0.5 }}
             onPointerEnter={isMobile ? undefined : () => { setHovered(t); onPreview(t); }}
             onPointerLeave={isMobile ? undefined : () => { setHovered(null); onPreview(null); }}
             onClick={isMobile ? undefined : () => handleConfirm(t)}

@@ -51,7 +51,7 @@ function App() {
             <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26a1 1 0 0 0-.29-.09V6.5a1 1 0 0 0-2 0v7.53l-1.23-.26a3 3 0 0 0-2.9.8l-.13.13 3.45 3.46a5.002 5.002 0 0 0 3.55 1.47h2.09c1.46 0 2.72-.97 3.07-2.39l.39-1.57c.03-.14.05-.28.05-.42 0-.98-.61-1.83-1.51-2.22z"/>
           </svg>
           <p className="text-fg text-base font-semibold tracking-widest uppercase animate-pulse">
-            toca para sintonizar
+            toca para empezar
           </p>
         </div>
       )}
