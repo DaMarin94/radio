@@ -22,7 +22,7 @@ export function mapRadioStation(
     name,
     displayName: formatDisplayName(name),
 
-    streamUrl: station.url_resolved,
+    streamUrl: station.url_resolved?.replace(/^http:\/\//i, "https://") ?? station.url_resolved,
 
     favicon: station.favicon ?? null,
     homepage: station.homepage ?? null,
