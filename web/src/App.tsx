@@ -3,21 +3,28 @@ import { useEffect, useState } from "react";
 import TunerWheel from "./components/TunerWheel";
 import AudioPlayer from "./components/AudioPlayer";
 import BandSwitch from "./components/BandSwitch";
+import ThemePicker, { type Theme } from "./components/ThemePicker";
 import { useTuner } from "./hooks/useTuner";
 
 function App() {
   const tuner = useTuner();
 
-  const THEMES = ["dark", "light", "digital", "amber", "warm", "blue"] as const;
-  type Theme = typeof THEMES[number];
-  const THEME_LABELS: Record<Theme, string> = { digital: "digital", dark: "dark", amber: "amber", blue: "blue", light: "light", warm: "warm" };
+  const [confirmedTheme, setConfirmedTheme] = useState<Theme>(
+    () => (localStorage.getItem("theme") ?? "digital") as Theme
+  );
+  const [previewTheme, setPreviewTheme] = useState<Theme | null>(null);
 
-  const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem("theme") ?? "digital") as Theme);
+  const activeTheme = previewTheme ?? confirmedTheme;
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    document.documentElement.setAttribute("data-theme", activeTheme);
+  }, [activeTheme]);
+
+  const handleConfirm = (t: Theme) => {
+    setConfirmedTheme(t);
+    localStorage.setItem("theme", t);
+    setPreviewTheme(null);
+  };
 
   const [streamError, setStreamError] = useState(false);
 
@@ -26,19 +33,18 @@ function App() {
   const displayRadio = tuner.previewRadio ?? tuner.selectedRadio;
 
   return (
-    <div className="flex flex-col w-full min-h-screen p-5 box-border">
-      <div className="flex items-center justify-between mb-5">
-        <BandSwitch value={tuner.band} onChange={tuner.changeBand} />
-
-        <div className="flex items-center gap-3">
+    <div className="flex flex-col w-full min-h-screen p-5 box-border select-none">
+      <div className="mb-5">
+        <div className="flex items-center justify-between">
+          <BandSwitch value={tuner.band} onChange={tuner.changeBand} />
           <AudioPlayer selectedRadio={tuner.selectedRadio} isTuning={tuner.isTuning} onError={() => setStreamError(true)} />
-          <button
-            onClick={() => setTheme(t => THEMES[(THEMES.indexOf(t) + 1) % THEMES.length])}
-            className="border-none cursor-pointer bg-panel-light text-fg rounded-full text-[10px] font-bold tracking-wider uppercase shrink-0"
-            style={{ width: "var(--button-size)", height: "var(--button-size)" }}
-          >
-            {THEME_LABELS[theme]}
-          </button>
+        </div>
+        <div className="flex justify-end mt-2">
+          <ThemePicker
+            active={activeTheme}
+            onPreview={setPreviewTheme}
+            onConfirm={handleConfirm}
+          />
         </div>
       </div>
 
