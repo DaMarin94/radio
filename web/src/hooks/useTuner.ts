@@ -22,6 +22,10 @@ export function useTuner() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
+  }, []);
+
+  useEffect(() => {
     localStorage.setItem(`frequency-${band}`, String(frequency));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [frequency]);
@@ -66,9 +70,9 @@ export function useTuner() {
   function handleFrequencyRelease(value: number) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     const station = resolveStationByTuning(value, filteredRadios);
+    setPreviewRadio(null);
     if (!station) return;
     setSelectedRadio(station);
-    setPreviewRadio(null);
   }
 
   function changeBand(nextBand: Band) {

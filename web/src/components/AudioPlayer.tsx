@@ -37,6 +37,11 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
     onBufferingChange?.(isBuffering);
   }, [isBuffering, onBufferingChange]);
 
+  // Close AudioContext on unmount
+  useEffect(() => {
+    return () => { audioCtxRef.current?.close(); };
+  }, []);
+
   // Proactive autoplay test: detect block before any station loads
   useEffect(() => {
     const test = new Audio();
@@ -55,6 +60,15 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
   // Retry play() on first user gesture (mobile autoplay unlock)
   useEffect(() => {
     const retry = () => {
+      // Unlock AudioContext (iOS requires gesture context)
+      if (!audioCtxRef.current) {
+        try {
+          const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+          audioCtxRef.current = new AudioCtx();
+        } catch { /* unsupported */ }
+      }
+      audioCtxRef.current?.resume();
+
       if (!needsGestureRef.current || !audioRef.current) return;
       needsGestureRef.current = false;
       onNeedsGesture?.(false);
