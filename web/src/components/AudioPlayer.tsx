@@ -8,9 +8,10 @@ type Props = {
   isTuning: boolean;
   onError?: () => void;
   onBufferingChange?: (buffering: boolean) => void;
+  onNeedsGesture?: (needs: boolean) => void;
 };
 
-function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange }: Props) {
+function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNeedsGesture }: Props) {
   const { isMobile } = useDevice();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -19,6 +20,7 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange }: Pr
 
   const [audioReady, setAudioReady] = useState(false);
   const [streamFailed, setStreamFailed] = useState(false);
+  const needsGestureRef = useRef(false);
 
   const [volume, setVolume] = useState(() => {
     const saved = localStorage.getItem("player-volume");
@@ -34,6 +36,38 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange }: Pr
   useEffect(() => {
     onBufferingChange?.(isBuffering);
   }, [isBuffering, onBufferingChange]);
+
+  // Proactive autoplay test: detect block before any station loads
+  useEffect(() => {
+    const test = new Audio();
+    test.src = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAAACABAAZGF0YQAAAAA=";
+    test.volume = 0;
+    test.play()
+      .then(() => { test.pause(); })
+      .catch((e: DOMException) => {
+        if (e.name === "NotAllowedError") {
+          needsGestureRef.current = true;
+          onNeedsGesture?.(true);
+        }
+      });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Retry play() on first user gesture (mobile autoplay unlock)
+  useEffect(() => {
+    const retry = () => {
+      if (!needsGestureRef.current || !audioRef.current) return;
+      needsGestureRef.current = false;
+      onNeedsGesture?.(false);
+      setAudioReady(false);
+      audioRef.current.play().catch(() => {});
+    };
+    document.addEventListener("touchstart", retry, { once: true, passive: true });
+    document.addEventListener("click", retry, { once: true });
+    return () => {
+      document.removeEventListener("touchstart", retry);
+      document.removeEventListener("click", retry);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const shouldPlayStatic = !isMuted && (isTuning || (selectedRadio !== null && !audioReady));
 
@@ -114,7 +148,8 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange }: Pr
 
     audio.src = selectedRadio.streamUrl;
     audio.play().catch((err: DOMException) => {
-      if (err.name === "AbortError" || err.name === "NotAllowedError") return;
+      if (err.name === "AbortError") return;
+      if (err.name === "NotAllowedError") { setAudioReady(true); needsGestureRef.current = true; onNeedsGesture?.(true); return; }
       console.error(err);
       setStreamFailed(true);
       onError?.();

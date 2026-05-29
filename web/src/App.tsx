@@ -29,6 +29,7 @@ function App() {
 
   const [streamError, setStreamError] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
+  const [needsGesture, setNeedsGesture] = useState(false);
 
   const isLoading = tuner.isLoadingRadios || isBuffering;
   const loadingMessage = tuner.isLoadingRadios
@@ -44,6 +45,16 @@ function App() {
   return (
     <div className="flex flex-col w-full min-h-dvh p-5 box-border select-none">
       <LoadingBar isLoading={isLoading} />
+      {needsGesture && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 backdrop-blur-sm" style={{ backgroundColor: 'rgba(0,0,0,0.55)' }}>
+          <svg viewBox="0 0 24 24" width="40" height="40" fill="currentColor" className="text-fg opacity-70">
+            <path d="M9 11.24V7.5a2.5 2.5 0 0 1 5 0v3.74c1.21-.81 2-2.18 2-3.74C16 5.01 13.99 3 11.5 3S7 5.01 7 7.5c0 1.56.79 2.93 2 3.74zm9.84 4.63-4.54-2.26a1 1 0 0 0-.29-.09V6.5a1 1 0 0 0-2 0v7.53l-1.23-.26a3 3 0 0 0-2.9.8l-.13.13 3.45 3.46a5.002 5.002 0 0 0 3.55 1.47h2.09c1.46 0 2.72-.97 3.07-2.39l.39-1.57c.03-.14.05-.28.05-.42 0-.98-.61-1.83-1.51-2.22z"/>
+          </svg>
+          <p className="text-fg text-base font-semibold tracking-widest uppercase animate-pulse">
+            toca para sintonizar
+          </p>
+        </div>
+      )}
       {loadingMessage && (
         <div className="fixed bottom-16 left-0 right-0 flex justify-center pointer-events-none">
           <p className="text-sm text-fg-muted tracking-widest uppercase animate-pulse">
@@ -58,6 +69,7 @@ function App() {
           isTuning={tuner.isTuning}
           onError={() => setStreamError(true)}
           onBufferingChange={setIsBuffering}
+          onNeedsGesture={setNeedsGesture}
         />
       </div>
 
