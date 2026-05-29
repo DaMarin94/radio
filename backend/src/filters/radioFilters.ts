@@ -1,35 +1,8 @@
 import {
-  RadioBrowserStation,
   RadioStation,
   ReverseGeocodeResult,
 } from "../models/radioStation";
 import { getDistanceKm } from "../utils/radioUtils";
-
-// AR-B = Buenos Aires province, AR-C = CABA
-const BA_ISO_CODES = new Set(["AR-B", "AR-C"]);
-
-export function isBuenosAiresStation(
-  station: RadioBrowserStation
-): boolean {
-  if (station.iso_3166_2) {
-    return BA_ISO_CODES.has(station.iso_3166_2);
-  }
-
-  const state = station.state?.toLowerCase() || "";
-
-  // Include stations with no state — Radio Browser often lacks subdivision
-  // data for valid BA stations (e.g. Blue 100.7, Aspen). Since we already
-  // query by countrycode=AR, the risk of including non-BA stations is low.
-  if (!state) return true;
-
-  return state.includes("buenos aires");
-}
-
-export function hasValidStream(
-  station: RadioBrowserStation
-): boolean {
-  return Boolean(station.name && station.url_resolved) && station.lastcheckok !== 0;
-}
 
 export function filterNearby(
   stations: RadioStation[],

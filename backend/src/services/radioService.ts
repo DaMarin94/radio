@@ -8,13 +8,15 @@ import {
 import { reverseGeocode } from "../providers/nominatim";
 
 import {
-  hasValidStream,
-  isBuenosAiresStation,
   isWithinAntennaRange,
   stationMatchesLocation,
 } from "../filters/radioFilters";
 
-import { mapRadioStation } from "../mappers/radioMapper";
+import {
+  hasValidStream,
+  isBuenosAiresStation,
+  mapRadioStation,
+} from "../mappers/radioMapper";
 import { sortByBandAndFrequency } from "../sorters/radioSorters";
 import { RadioBrowserStation, RadioStation, ReverseGeocodeResult } from "../models/radioStation";
 
