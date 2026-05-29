@@ -118,6 +118,28 @@ function TunerWheel({ band, value, onChange, onRelease }: Props) {
     setDragOffset(0);
   }
 
+  function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    const { min: sMin, max: sMax, step: wStep, precision: prec } = SCALES[band];
+    let next: number | null = null;
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") {
+      e.preventDefault();
+      next = snap(valueRef.current - wStep, prec, sMin, sMax);
+    } else if (e.key === "ArrowRight" || e.key === "ArrowUp") {
+      e.preventDefault();
+      next = snap(valueRef.current + wStep, prec, sMin, sMax);
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      next = sMin;
+    } else if (e.key === "End") {
+      e.preventDefault();
+      next = sMax;
+    }
+    if (next !== null) {
+      onChangeRef.current(next);
+      onReleaseRef.current(next);
+    }
+  }
+
   const centerX = containerW / 2;
   const R = containerW * 0.45;
   const ticks: React.ReactNode[] = [];
@@ -200,10 +222,19 @@ function TunerWheel({ band, value, onChange, onRelease }: Props) {
     <div
       ref={containerRef}
       className={styles.drumH}
+      role="slider"
+      tabIndex={0}
+      aria-label="Sintonizador"
+      aria-orientation="horizontal"
+      aria-valuemin={min}
+      aria-valuemax={max}
+      aria-valuenow={liveValue}
+      aria-valuetext={band === "FM" ? `${liveValue.toFixed(1)} FM` : `${liveValue} AM`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      onKeyDown={handleKeyDown}
     >
       {ticks}
       <div className={styles.divider} />
