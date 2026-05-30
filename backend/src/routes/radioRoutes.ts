@@ -4,6 +4,7 @@ import {
   getNearbyStations,
   getStationsByLocation,
   registerClick,
+  getNowPlaying,
 } from "../services/radioService";
 
 const router = Router();
@@ -60,6 +61,24 @@ router.get("/by-location", async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch stations by location" });
+  }
+});
+
+router.get("/nowplaying/:id", async (req: Request, res: Response) => {
+  const id = Array.isArray(req.params["id"]) ? req.params["id"][0] : req.params["id"];
+  const url = req.query["url"] as string | undefined;
+
+  if (!id || !url) {
+    res.status(400).json({ error: "id and url are required" });
+    return;
+  }
+
+  try {
+    const title = await getNowPlaying(id, url);
+    res.json({ title });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch now playing" });
   }
 });
 

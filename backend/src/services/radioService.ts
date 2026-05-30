@@ -6,6 +6,7 @@ import {
 } from "../providers/radioBrowser";
 
 import { reverseGeocode } from "../providers/nominatim";
+import { recognizeSong } from "../providers/audd";
 
 import {
   isWithinAntennaRange,
@@ -19,11 +20,15 @@ import {
 } from "../mappers/radioMapper";
 import { sortByBandAndFrequency } from "../sorters/radioSorters";
 import { RadioBrowserStation, RadioStation, ReverseGeocodeResult } from "../models/radioStation";
+import { TTLCache } from "../utils/cache";
 
 export type StationsByLocationResult = {
   location: ReverseGeocodeResult;
   stations: RadioStation[];
 };
+
+const rawStationsCache = new TTLCache<RadioBrowserStation[]>(5 * 60 * 1000);
+const nowPlayingCache = new TTLCache<string | null>(60 * 1000);
 
 function hasFrequency(station: RadioStation): boolean {
   return station.frequency !== null && station.band !== null;
@@ -37,11 +42,19 @@ function buildStationList(raw: RadioBrowserStation[]): RadioStation[] {
     .sort(sortByBandAndFrequency);
 }
 
+async function getCachedArgentinaStations(): Promise<RadioBrowserStation[]> {
+  const cached = rawStationsCache.get("AR");
+  if (cached !== undefined) return cached;
+  const fresh = await getArgentinaStations();
+  rawStationsCache.set("AR", fresh);
+  return fresh;
+}
+
 export async function getBuenosAiresStations(
   userLat?: number,
   userLng?: number
 ): Promise<RadioStation[]> {
-  const raw = await getArgentinaStations();
+  const raw = await getCachedArgentinaStations();
   const stations = buildStationList(raw.filter(isBuenosAiresStation));
 
   if (userLat !== undefined && userLng !== undefined) {
@@ -77,7 +90,6 @@ export async function getStationsByLocation(
     stationMatchesLocation(station, location)
   );
 
-  // If very few local results, return all country stations as fallback
   const stations = local.length >= 3 ? local : all;
 
   return { location, stations };
@@ -85,4 +97,16 @@ export async function getStationsByLocation(
 
 export async function registerClick(uuid: string): Promise<void> {
   await clickStationOnBrowser(uuid);
+}
+
+export async function getNowPlaying(uuid: string, streamUrl: string): Promise<string | null> {
+  const cached = nowPlayingCache.get(uuid);
+  if (cached !== undefined) return cached;
+
+  // TODO: enable when ready to use AudD credits (combine with ICY first)
+  // const title = await recognizeSong(streamUrl);
+  // nowPlayingCache.set(uuid, title);
+  // return title;
+  void uuid; void streamUrl;
+  return null;
 }

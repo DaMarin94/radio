@@ -6,9 +6,11 @@ import BandSwitch from "./components/BandSwitch";
 import ThemePicker, { type Theme } from "./components/ThemePicker";
 import LoadingBar from "./components/LoadingBar";
 import { useTuner } from "./hooks/useTuner";
+import { useNowPlaying } from "./hooks/useNowPlaying";
 
 function App() {
   const tuner = useTuner();
+  const nowPlaying = useNowPlaying(tuner.selectedRadio);
 
   const [confirmedTheme, setConfirmedTheme] = useState<Theme>(
     () => (localStorage.getItem("theme") ?? "digital") as Theme
@@ -97,6 +99,11 @@ function App() {
               <div className="text-base sm:text-xl text-fg-muted font-medium tracking-widest">
                 {displayRadio.band} {displayRadio.frequency}
               </div>
+              {nowPlaying && !tuner.previewRadio && (
+                <div className="text-sm text-fg-muted font-medium tracking-wide opacity-70 line-clamp-1 max-w-xs">
+                  {nowPlaying}
+                </div>
+              )}
             </div>
           )}
         </div>
