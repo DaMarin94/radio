@@ -27,7 +27,10 @@ export type StationsByLocationResult = {
   stations: RadioStation[];
 };
 
-const rawStationsCache = new TTLCache<RadioBrowserStation[]>(5 * 60 * 1000);
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
+const rawStationsCache = new TTLCache<RadioBrowserStation[]>(ONE_DAY_MS);
+const processedBACache = new TTLCache<RadioStation[]>(ONE_DAY_MS);
 const nowPlayingCache = new TTLCache<string | null>(60 * 1000);
 
 function hasFrequency(station: RadioStation): boolean {
@@ -43,19 +46,17 @@ function buildStationList(raw: RadioBrowserStation[]): RadioStation[] {
 }
 
 async function getCachedArgentinaStations(): Promise<RadioBrowserStation[]> {
-  const cached = rawStationsCache.get("AR");
-  if (cached !== undefined) return cached;
-  const fresh = await getArgentinaStations();
-  rawStationsCache.set("AR", fresh);
-  return fresh;
+  return rawStationsCache.getOrFetch("AR", getArgentinaStations);
 }
 
 export async function getBuenosAiresStations(
   userLat?: number,
   userLng?: number
 ): Promise<RadioStation[]> {
-  const raw = await getCachedArgentinaStations();
-  const stations = buildStationList(raw.filter(isBuenosAiresStation));
+  const stations = await processedBACache.getOrFetch("BA", async () => {
+    const raw = await getCachedArgentinaStations();
+    return buildStationList(raw.filter(isBuenosAiresStation));
+  });
 
   if (userLat !== undefined && userLng !== undefined) {
     return stations.filter((s) => isWithinAntennaRange(s, userLat, userLng));
