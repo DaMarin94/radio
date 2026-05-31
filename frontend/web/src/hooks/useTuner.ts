@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { api } from "../services/api";
+import { api, fetchStations } from "../services/api";
 import type { RadioStation } from "@radio/shared";
 import { resolveStationByTuning, getUserLocation } from "@radio/shared";
 import { getSavedFrequency } from "../helpers/getSavedFrequency";
@@ -36,10 +36,9 @@ export function useTuner() {
   useEffect(() => {
     getUserLocation().then((loc) => {
       setUserLocation(loc);
-      const params = loc ? { lat: loc.lat, lng: loc.lng } : {};
-      return api.get("/radios/buenos-aires", { params });
+      return fetchStations(loc ?? undefined);
     })
-      .then((res) => { setRadios(res.data); setIsLoadingRadios(false); })
+      .then((stations) => { setRadios(stations); setIsLoadingRadios(false); })
       .catch((err) => { console.error(err); setIsLoadingRadios(false); });
   }, []);
 
