@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-surface: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-light: var(--panel-light);
+  --color-fg: var(--text);
+  --color-fg-muted: var(--text-secondary);
+}
+
+/* Dark — matches web app default.css */
+:root {
+  --bg: #101010;
+  --panel: #1a1a1a;
+  --panel-light: #2d2d2d;
+  --text: #ffffff;
+  --text-secondary: #83743f;
+  --needle: #83743f;
+  --track-hi: #444444;
+  --track-lo: #222222;
+  --track-radius: 999px;
+  --track-hi-w: 2px;
+  --track-lo-w: 6px;
+  --button-size: 36px;
+}
+
+/* Light — matches web app light.css */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f5f0e8;
+    --panel: #e8e0d0;
+    --panel-light: #d8ccc0;
+    --text: #2c2418;
+    --text-secondary: #8a7a60;
+    --needle: #c05000;
+    --track-hi: #b8a898;
+    --track-lo: #d8ccc0;
+  }
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+}

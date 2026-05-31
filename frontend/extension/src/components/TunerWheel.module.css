@@ -1,0 +1,74 @@
+.drumH {
+  position: relative;
+  width: 100%;
+  height: 76px;
+  overflow: hidden;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+  background: var(--panel);
+
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
+}
+
+.drumH:active {
+  cursor: grabbing;
+}
+
+.tick {
+  position: absolute;
+  width: 2px;
+  background: var(--text-secondary);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.tickLabel {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.needle {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: var(--needle);
+  opacity: 0.75;
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+.divider {
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 39px;
+  height: 1px;
+  background: var(--text-secondary);
+  opacity: 0.15;
+  pointer-events: none;
+}

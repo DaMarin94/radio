@@ -1,0 +1,47 @@
+.root {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100px;
+  height: 36px;
+  background: var(--panel);
+  border-radius: 999px;
+  padding: 3px;
+  border: none;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.root:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.thumb {
+  position: absolute;
+  left: 3px;
+  width: 46px;
+  height: 30px;
+  border-radius: 999px;
+  background: var(--panel-light);
+  transition: transform 0.2s ease;
+  pointer-events: none;
+}
+
+.root[data-state="checked"] .thumb {
+  transform: translateX(48px);
+}
+
+.label {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.active  { color: var(--text); }
+.inactive { color: var(--text-secondary); }

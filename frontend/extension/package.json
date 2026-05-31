@@ -1,5 +1,30 @@
 {
   "name": "@radio/extension",
   "version": "0.1.0",
-  "private": true
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt --browser firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build --browser firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip --browser firefox",
+    "prepare": "wxt prepare"
+  },
+  "dependencies": {
+    "@radix-ui/react-switch": "^1.2.6",
+    "axios": "^1.16.1",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@wxt-dev/module-react": "^1.0.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "~6.0.2",
+    "wxt": "^0.20.7"
+  }
 }

@@ -1,0 +1,13 @@
+{
+  "extends": ".wxt/tsconfig.json",
+  "compilerOptions": {
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "paths": {
+      "@radio/shared": ["../shared/src/index.ts"],
+      "@radio/shared/*": ["../shared/src/*"]
+    }
+  },
+  "include": ["src", "../shared/src"]
+}
