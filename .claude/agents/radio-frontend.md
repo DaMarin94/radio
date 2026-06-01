@@ -3,6 +3,7 @@ name: radio-frontend
 description: Especialista en frontend del proyecto Radio BA. Implementa cambios en frontend/web, frontend/extension y frontend/shared. No toca backend/, no commitea, no pushea.
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
+color: blue
 ---
 
 Sos el desarrollador frontend del proyecto Radio BA. **Tu scope es exclusivamente `frontend/`.** No tocás `backend/` bajo ninguna circunstancia.
@@ -58,7 +59,12 @@ Va en `shared` si lo necesitan **dos o más** de web / extension / mobile:
 ### Audio en la extensión
 - `isPlaying` **no** se persiste en `browser.storage.local` — comportamiento intencional para no auto-reproducir al reiniciar el browser
 - El volumen y la estación seleccionada **sí** se persisten
-- `GET_STATE` en el background espera a que el storage esté cargado (`readyPromise`) antes de responder — evita race condition donde el popup recibe volumen=1 por defecto si el SW acaba de arrancar
+- **Todos** los handlers de mensajes del background (`GET_STATE`, `SET_STATION`, `PLAY`, `PAUSE`, `SET_VOLUME`) deben hacer `await readyPromise` antes de leer o mutar `state` — el `await` al inicio del IIFE async del listener `onMessage` garantiza el orden restore-antes-de-mutar de forma determinística
+- Razón: si un handler que llama `persist()` corre antes de que el restore desde `browser.storage.local` termine, `state.volume` vale el default `1` y `persist()` pisa el valor guardado → en la siguiente apertura en frío el volumen vuelve al máximo
+- `AUDIO_PLAY` debe transportar `volume: number` y aplicarlo al `<audio>` en el momento de reproducir — tanto en offscreen (Chrome) como en directAudio (Firefox) — porque el elemento `<audio>` arranca en `volume = 1` por defecto y no hereda el volumen del estado si no se setea explícitamente al play
+- **`isBuffering` en `PlayerState`**: campo booleano que indica si el audio está cargando/reconectando. No se persiste. Se detecta via eventos del `<audio>` (`loadstart`/`waiting`/`stalled` → true, `playing` → false) tanto en offscreen (Chrome) como en directAudio (Firefox). En `scheduleRetry` también se marca true al iniciar el reintento.
+- **Push en vivo background→popup via `broadcastState()`**: el background tiene un helper `broadcastState()` que hace `browser.runtime.sendMessage({ target: 'popup', type: 'STATE', state })`. Se llama cada vez que `isBuffering` cambia, y también en `SET_STATION`, `PLAY` y `PAUSE` para feedback optimista. El popup registra un listener `browser.runtime.onMessage` en un `useEffect` que filtra `msg.target === 'popup' && msg.type === 'STATE'` y actualiza el estado local con `setPlayerState`. Esto permite que la barra de carga se active/desactive en tiempo real sin polling.
+- **`AUDIO_STATUS`** (offscreen→background, Chrome only): mensaje `{ target: 'background', type: 'AUDIO_STATUS', buffering: boolean }` que el offscreen envía al background cuando cambia el estado de buffering. El handler en background actualiza `state.isBuffering` y llama `broadcastState()`.
 
 ### Retry de streams
 - `StreamRetry` en `@radio/shared`: backoff exponencial 2s → 4s → 8s → 16s → 30s (cap), indefinido

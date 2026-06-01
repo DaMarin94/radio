@@ -10,7 +10,7 @@ function isBackgroundMessage(m: unknown): m is BackgroundMessage {
 }
 
 export default defineBackground(() => {
-  let state: PlayerState = { station: null, isPlaying: false, volume: 1 };
+  let state: PlayerState = { station: null, isPlaying: false, volume: 1, isBuffering: false };
 
   // Firefox MV2: background is a persistent page with full DOM — play audio directly.
   // Chrome MV3: background is a service worker — audio goes through offscreen document.
@@ -20,16 +20,34 @@ export default defineBackground(() => {
     directAudio = new Audio();
     directAudio.volume = state.volume;
     directRetry = new StreamRetry();
+    directAudio.addEventListener('loadstart', () => {
+      state = { ...state, isBuffering: true };
+      broadcastState();
+    });
+    directAudio.addEventListener('waiting', () => {
+      state = { ...state, isBuffering: true };
+      broadcastState();
+    });
+    directAudio.addEventListener('stalled', () => {
+      state = { ...state, isBuffering: true };
+      broadcastState();
+    });
     directAudio.addEventListener('error', () => {
       if (!state.isPlaying || !state.station || !directRetry) return;
       const station = state.station;
+      state = { ...state, isBuffering: true };
+      broadcastState();
       directRetry.schedule(() => {
         if (!directAudio || !state.isPlaying || state.station?.id !== station.id) return;
         directAudio.src = station.streamUrl;
         directAudio.play().catch(console.error);
       });
     });
-    directAudio.addEventListener('playing', () => directRetry?.reset());
+    directAudio.addEventListener('playing', () => {
+      directRetry?.reset();
+      state = { ...state, isBuffering: false };
+      broadcastState();
+    });
   }
 
   // Restore persisted volume + last station. isPlaying is intentionally NOT restored —
@@ -45,6 +63,10 @@ export default defineBackground(() => {
   function persist() {
     const toSave: PersistedState = { station: state.station, volume: state.volume };
     browser.storage.local.set({ [STORAGE_KEY]: toSave }).catch(() => {});
+  }
+
+  function broadcastState() {
+    browser.runtime.sendMessage({ target: 'popup', type: 'STATE', state } satisfies PopupMessage).catch(() => {});
   }
 
   async function ensureOffscreen() {
@@ -64,6 +86,7 @@ export default defineBackground(() => {
     if (directAudio) {
       if (msg.type === 'AUDIO_PLAY') {
         directRetry?.reset();
+        directAudio.volume = msg.volume;
         if (directAudio.src !== msg.url) directAudio.src = msg.url;
         directAudio.play().catch(console.error);
       } else if (msg.type === 'AUDIO_PAUSE') {
@@ -85,17 +108,26 @@ export default defineBackground(() => {
       return readyPromise.then(() => ({ target: 'popup', type: 'STATE', state } as PopupMessage));
     }
 
+    // AUDIO_STATUS comes from the offscreen document (Chrome only) — no readyPromise needed
+    // but we keep it inside the async IIFE for consistency with the rest of the handlers.
     return (async () => {
-      if (msg.type === 'SET_STATION') {
-        state = { ...state, station: msg.station, isPlaying: true };
+      await readyPromise;
+      if (msg.type === 'AUDIO_STATUS') {
+        state = { ...state, isBuffering: msg.buffering };
+        broadcastState();
+      } else if (msg.type === 'SET_STATION') {
+        state = { ...state, station: msg.station, isPlaying: true, isBuffering: true };
         persist();
-        await sendAudioCommand({ target: 'offscreen', type: 'AUDIO_PLAY', url: msg.station.streamUrl });
+        broadcastState();
+        await sendAudioCommand({ target: 'offscreen', type: 'AUDIO_PLAY', url: msg.station.streamUrl, volume: state.volume });
       } else if (msg.type === 'PLAY') {
         if (!state.station) return;
-        state = { ...state, isPlaying: true };
-        await sendAudioCommand({ target: 'offscreen', type: 'AUDIO_PLAY', url: state.station.streamUrl });
+        state = { ...state, isPlaying: true, isBuffering: true };
+        broadcastState();
+        await sendAudioCommand({ target: 'offscreen', type: 'AUDIO_PLAY', url: state.station.streamUrl, volume: state.volume });
       } else if (msg.type === 'PAUSE') {
-        state = { ...state, isPlaying: false };
+        state = { ...state, isPlaying: false, isBuffering: false };
+        broadcastState();
         await sendAudioCommand({ target: 'offscreen', type: 'AUDIO_PAUSE' });
       } else if (msg.type === 'SET_VOLUME') {
         state = { ...state, volume: msg.volume };

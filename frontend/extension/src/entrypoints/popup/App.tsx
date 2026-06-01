@@ -1,6 +1,7 @@
 import BandSwitch from '../../components/BandSwitch';
 import TunerWheel from '../../components/TunerWheel';
 import AudioPlayer from '../../components/AudioPlayer';
+import LoadingBar from '../../components/LoadingBar';
 import { useTuner } from '../../hooks/useTuner';
 import { useBackgroundAudio } from '../../hooks/useBackgroundAudio';
 
@@ -11,7 +12,8 @@ export default function App() {
   const displayRadio = tuner.previewRadio ?? tuner.selectedRadio;
 
   return (
-    <div className="w-80 bg-surface text-fg select-none overflow-hidden">
+    <div className="relative w-80 bg-surface text-fg select-none overflow-hidden">
+      <LoadingBar isLoading={tuner.isLoadingRadios || playerState.isBuffering} />
       {/* Top bar */}
       <div className="flex items-center justify-between px-4 pt-3 pb-2">
         <BandSwitch value={tuner.band} onChange={tuner.changeBand} />

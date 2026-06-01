@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { RadioStation } from '@radio/shared';
 import type { BackgroundMessage, PlayerState, PopupMessage } from '../lib/messages';
 
-const DEFAULT_STATE: PlayerState = { station: null, isPlaying: false, volume: 1 };
+const DEFAULT_STATE: PlayerState = { station: null, isPlaying: false, volume: 1, isBuffering: false };
 
 export function useBackgroundAudio(selectedRadio: RadioStation | null) {
   const [playerState, setPlayerState] = useState<PlayerState>(DEFAULT_STATE);
@@ -18,6 +18,22 @@ export function useBackgroundAudio(selectedRadio: RadioStation | null) {
       .catch(() => {});
   }, []);
 
+  // Listen for live state pushes from background (buffering updates, etc.)
+  useEffect(() => {
+    const listener = (msg: unknown) => {
+      if (
+        typeof msg === 'object' &&
+        msg !== null &&
+        (msg as PopupMessage).target === 'popup' &&
+        (msg as PopupMessage).type === 'STATE'
+      ) {
+        setPlayerState((msg as PopupMessage).state);
+      }
+    };
+    browser.runtime.onMessage.addListener(listener);
+    return () => browser.runtime.onMessage.removeListener(listener);
+  }, []);
+
   // Notify background whenever the tuner selects a new station
   useEffect(() => {
     if (!selectedRadio) return;
@@ -28,21 +44,21 @@ export function useBackgroundAudio(selectedRadio: RadioStation | null) {
       .sendMessage({ target: 'background', type: 'SET_STATION', station: selectedRadio } satisfies BackgroundMessage)
       .catch(() => {});
 
-    setPlayerState((s) => ({ ...s, station: selectedRadio, isPlaying: true }));
+    setPlayerState((s) => ({ ...s, station: selectedRadio, isPlaying: true, isBuffering: true }));
   }, [selectedRadio]);
 
   function play() {
     browser.runtime
       .sendMessage({ target: 'background', type: 'PLAY' } satisfies BackgroundMessage)
       .catch(() => {});
-    setPlayerState((s) => ({ ...s, isPlaying: true }));
+    setPlayerState((s) => ({ ...s, isPlaying: true, isBuffering: true }));
   }
 
   function pause() {
     browser.runtime
       .sendMessage({ target: 'background', type: 'PAUSE' } satisfies BackgroundMessage)
       .catch(() => {});
-    setPlayerState((s) => ({ ...s, isPlaying: false }));
+    setPlayerState((s) => ({ ...s, isPlaying: false, isBuffering: false }));
   }
 
   function setVolume(volume: number) {
