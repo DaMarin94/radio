@@ -1,0 +1,48 @@
+.slider {
+  width: 80px;
+  appearance: none;
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--text) 0%,
+    var(--text) var(--volume),
+    var(--track-hi) var(--volume),
+    var(--track-hi) 100%
+  );
+  outline: none;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text);
+  cursor: pointer;
+  border: none;
+}
+
+.button {
+  width: var(--button-size);
+  height: var(--button-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  background: var(--panel-light);
+  color: var(--text);
+  border-radius: 999px;
+  flex-shrink: 0;
+}

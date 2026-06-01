@@ -32,6 +32,14 @@ Player fijo en bottom-right. No es un reproductor genérico: está integrado con
 
 Usa el elemento `<audio>` nativo del browser con la `streamUrl` de la estación activa.
 
+## Indicador de carga (extensión)
+
+Barra animada de 2px en el borde superior del popup que se activa durante:
+- La carga inicial de la lista de radios (`isLoadingRadios`)
+- El buffering del stream de audio (`isBuffering` en `PlayerState`)
+
+El estado de buffering se detecta en el proceso que maneja el audio (`waiting`, `stalled`, `loadstart` → buffering; `playing` → listo) y se propaga en vivo al popup via `broadcastState()` (background → popup). En Chrome el offscreen document envía un mensaje `AUDIO_STATUS` al background, que a su vez lo re-emite al popup. En Firefox el background page lo detecta directamente en el elemento `<audio>`. El popup registra un listener `browser.runtime.onMessage` para recibir estos pushes sin necesidad de polling.
+
 ## Nearby Mode (experimental)
 
 Permite filtrar las estaciones visibles en el dial por proximidad geográfica al usuario.

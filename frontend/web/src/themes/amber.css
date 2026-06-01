@@ -1,0 +1,24 @@
+[data-theme="amber"] {
+  --bg: #0a0700;
+  --panel: #150e00;
+  --panel-light: #211500;
+  --text: #ffb300;
+  --text-secondary: #7a5200;
+  --shadow: 0 0 24px rgba(255, 179, 0, 0.08);
+  --needle: #ff6600;
+  --track-hi: #3d2800;
+  --track-lo: #150e00;
+  --track-radius: 2px;
+  --track-hi-w: 5px;
+  --track-lo-w: 3px;
+}
+
+[data-theme="amber"] body {
+  background-color: #0a0700;
+  background-image:
+    linear-gradient(to bottom, #0a0700 0%, transparent 55%),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><line x1='100' y1='0' x2='0' y2='100' stroke='%23ffb300' stroke-opacity='0.02' stroke-width='0.2'/><line x1='110' y1='0' x2='10' y2='100' stroke='%23ffb300' stroke-opacity='0.03' stroke-width='0.2'/><line x1='120' y1='0' x2='20' y2='100' stroke='%23ffb300' stroke-opacity='0.05' stroke-width='0.2'/><line x1='130' y1='0' x2='30' y2='100' stroke='%23ffb300' stroke-opacity='0.06' stroke-width='0.2'/><line x1='140' y1='0' x2='40' y2='100' stroke='%23ffb300' stroke-opacity='0.07' stroke-width='0.2'/><line x1='150' y1='0' x2='50' y2='100' stroke='%23ffb300' stroke-opacity='0.09' stroke-width='0.2'/><line x1='160' y1='0' x2='60' y2='100' stroke='%23ffb300' stroke-opacity='0.10' stroke-width='0.2'/><line x1='170' y1='0' x2='70' y2='100' stroke='%23ffb300' stroke-opacity='0.12' stroke-width='0.2'/><line x1='180' y1='0' x2='80' y2='100' stroke='%23ffb300' stroke-opacity='0.14' stroke-width='0.2'/><line x1='190' y1='0' x2='90' y2='100' stroke='%23ffb300' stroke-opacity='0.16' stroke-width='0.2'/></svg>");
+  background-size: 100% 100%, min(100%, 850px) auto;
+  background-repeat: no-repeat, no-repeat;
+  background-position: top, right bottom;
+}
