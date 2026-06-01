@@ -70,6 +70,7 @@ function App() {
           selectedRadio={tuner.selectedRadio}
           isTuning={tuner.isTuning}
           onError={() => setStreamError(true)}
+          onReady={() => setStreamError(false)}
           onBufferingChange={setIsBuffering}
           onNeedsGesture={setNeedsGesture}
         />

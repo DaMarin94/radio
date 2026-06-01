@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { RadioStation } from "@radio/shared";
+import { StreamRetry } from "@radio/shared";
 import { useDevice } from "../context/DeviceContext";
 import styles from "./AudioPlayer.module.css";
 
@@ -7,11 +8,12 @@ type Props = {
   selectedRadio: RadioStation | null;
   isTuning: boolean;
   onError?: () => void;
+  onReady?: () => void;
   onBufferingChange?: (buffering: boolean) => void;
   onNeedsGesture?: (needs: boolean) => void;
 };
 
-function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNeedsGesture }: Props) {
+function AudioPlayer({ selectedRadio, isTuning, onError, onReady, onBufferingChange, onNeedsGesture }: Props) {
   const { isMobile } = useDevice();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -30,6 +32,8 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
 
   const volumeRef = useRef(volume);
   volumeRef.current = volume;
+
+  const retryRef = useRef(new StreamRetry());
 
   const isBuffering = selectedRadio !== null && !audioReady && !isTuning && !streamFailed;
 
@@ -156,17 +160,31 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
     if (!audioRef.current || !selectedRadio) return;
 
     const audio = audioRef.current;
-    const handlePlaying = () => setAudioReady(true);
+    const handlePlaying = () => { setAudioReady(true); retryRef.current.reset(); onReady?.(); };
+    const handleWaiting = () => setAudioReady(false);
+    const scheduleRetry = () => {
+      setAudioReady(false);
+      onError?.();
+      retryRef.current.schedule(() => {
+        if (!audioRef.current) return;
+        audioRef.current.src = selectedRadio.streamUrl;
+        audioRef.current.play().catch(() => {});
+      });
+    };
     const handleError = () => {
       // Aborted = station switched mid-load, not a real error
       if (audio.error?.code === MediaError.MEDIA_ERR_ABORTED) return;
       // Pre-gesture errors on mobile are likely preload false positives
       if (needsGestureRef.current) return;
-      setStreamFailed(true);
-      onError?.();
+      scheduleRetry();
     };
+    // `ended` fires when the server closes the connection (stream terminated)
+    const handleEnded = () => scheduleRetry();
+
     audio.addEventListener("playing", handlePlaying);
+    audio.addEventListener("waiting", handleWaiting);
     audio.addEventListener("error", handleError);
+    audio.addEventListener("ended", handleEnded);
 
     audio.src = selectedRadio.streamUrl;
     audio.play().catch((err: DOMException) => {
@@ -179,7 +197,10 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
 
     return () => {
       audio.removeEventListener("playing", handlePlaying);
+      audio.removeEventListener("waiting", handleWaiting);
       audio.removeEventListener("error", handleError);
+      audio.removeEventListener("ended", handleEnded);
+      retryRef.current.reset();
     };
   }, [selectedRadio]);
 
