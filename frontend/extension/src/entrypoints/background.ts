@@ -21,7 +21,8 @@ export default defineBackground(() => {
 
   // Restore persisted volume + last station. isPlaying is intentionally NOT restored —
   // we don't want audio auto-starting on browser restart.
-  browser.storage.local.get(STORAGE_KEY).then((result) => {
+  // readyPromise is awaited by GET_STATE so the popup never reads stale defaults.
+  const readyPromise = browser.storage.local.get(STORAGE_KEY).then((result) => {
     const saved = result[STORAGE_KEY] as PersistedState | undefined;
     if (!saved) return;
     state = { ...state, station: saved.station ?? null, volume: saved.volume ?? 1 };
@@ -66,7 +67,7 @@ export default defineBackground(() => {
     if (!isBackgroundMessage(msg)) return;
 
     if (msg.type === 'GET_STATE') {
-      return Promise.resolve({ target: 'popup', type: 'STATE', state } as PopupMessage);
+      return readyPromise.then(() => ({ target: 'popup', type: 'STATE', state } as PopupMessage));
     }
 
     return (async () => {
