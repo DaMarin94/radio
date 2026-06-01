@@ -32,12 +32,6 @@ radio/
 
 Ver `docs/` para documentación detallada de arquitectura, pipeline de datos y features.
 
-## Qué va en @radio/shared
-
-Antes de implementar lógica nueva, preguntarse: **¿la necesitan dos o más de web / extension / mobile?** Si sí, va en `frontend/shared/src/helpers/` y se exporta desde `index.ts`.
-
-Ejemplos de lo que **sí** va en shared: utilidades puras sin dependencia de DOM o framework (cálculos, clases de estado, backoff/retry, parsers, formatters). Lo que **no** va: hooks de React, componentes, acceso a APIs del browser (`localStorage`, `browser.storage`, `AudioContext`).
-
 ## Stack y configuración
 
 - TypeScript strict en ambos lados: `noUnusedLocals`, `noUnusedParameters` activos

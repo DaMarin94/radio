@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import type { RadioStation } from "@radio/shared";
-import { StreamRetry } from "@radio/shared";
 import { useDevice } from "../context/DeviceContext";
 import styles from "./AudioPlayer.module.css";
 
@@ -31,8 +30,6 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
 
   const volumeRef = useRef(volume);
   volumeRef.current = volume;
-
-  const retryRef = useRef(new StreamRetry());
 
   const isBuffering = selectedRadio !== null && !audioReady && !isTuning && !streamFailed;
 
@@ -159,7 +156,7 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
     if (!audioRef.current || !selectedRadio) return;
 
     const audio = audioRef.current;
-    const handlePlaying = () => { setAudioReady(true); retryRef.current.reset(); };
+    const handlePlaying = () => setAudioReady(true);
     const handleError = () => {
       // Aborted = station switched mid-load, not a real error
       if (audio.error?.code === MediaError.MEDIA_ERR_ABORTED) return;
@@ -167,13 +164,6 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
       if (needsGestureRef.current) return;
       setStreamFailed(true);
       onError?.();
-      retryRef.current.schedule(() => {
-        if (!audioRef.current) return;
-        setStreamFailed(false);
-        setAudioReady(false);
-        audioRef.current.src = selectedRadio.streamUrl;
-        audioRef.current.play().catch(() => {});
-      });
     };
     audio.addEventListener("playing", handlePlaying);
     audio.addEventListener("error", handleError);
@@ -190,7 +180,6 @@ function AudioPlayer({ selectedRadio, isTuning, onError, onBufferingChange, onNe
     return () => {
       audio.removeEventListener("playing", handlePlaying);
       audio.removeEventListener("error", handleError);
-      retryRef.current.reset();
     };
   }, [selectedRadio]);
 

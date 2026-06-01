@@ -1,5 +1,4 @@
 import type { BackgroundMessage, OffscreenMessage, PlayerState, PopupMessage } from '../lib/messages';
-import { StreamRetry } from '@radio/shared';
 
 const STORAGE_KEY = 'playerState';
 
@@ -15,21 +14,9 @@ export default defineBackground(() => {
   // Firefox MV2: background is a persistent page with full DOM — play audio directly.
   // Chrome MV3: background is a service worker — audio goes through offscreen document.
   let directAudio: HTMLAudioElement | null = null;
-  let directRetry: StreamRetry | null = null;
   if (import.meta.env.FIREFOX) {
     directAudio = new Audio();
     directAudio.volume = state.volume;
-    directRetry = new StreamRetry();
-    directAudio.addEventListener('error', () => {
-      if (!state.isPlaying || !state.station || !directRetry) return;
-      const station = state.station;
-      directRetry.schedule(() => {
-        if (!directAudio || !state.isPlaying || state.station?.id !== station.id) return;
-        directAudio.src = station.streamUrl;
-        directAudio.play().catch(console.error);
-      });
-    });
-    directAudio.addEventListener('playing', () => directRetry?.reset());
   }
 
   // Restore persisted volume + last station. isPlaying is intentionally NOT restored —
@@ -63,11 +50,9 @@ export default defineBackground(() => {
   async function sendAudioCommand(msg: OffscreenMessage) {
     if (directAudio) {
       if (msg.type === 'AUDIO_PLAY') {
-        directRetry?.reset();
         if (directAudio.src !== msg.url) directAudio.src = msg.url;
         directAudio.play().catch(console.error);
       } else if (msg.type === 'AUDIO_PAUSE') {
-        directRetry?.reset();
         directAudio.pause();
       } else if (msg.type === 'AUDIO_SET_VOLUME') {
         directAudio.volume = msg.volume;
