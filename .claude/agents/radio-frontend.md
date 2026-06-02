@@ -58,6 +58,7 @@ Va en `shared` si lo necesitan **dos o más** de web / extension / mobile:
 
 ### Audio en la extensión
 - `isPlaying` **no** se persiste en `browser.storage.local` — comportamiento intencional para no auto-reproducir al reiniciar el browser
+- **Reconciliación de `isPlaying` en `GET_STATE` (Chrome MV3)**: el service worker de Chrome MV3 es efímero y puede ser matado por Chrome a mitad de sesión mientras el offscreen document sigue reproduciendo. Al reiniciarse, el SW arranca con `isPlaying: false`. Para distinguir este caso de un reinicio real del browser (donde no hay offscreen), `GET_STATE` reconcilia `isPlaying` consultando la fuente de audio real: en Chrome, si `chrome.offscreen.hasDocument()` es true, envía `AUDIO_QUERY` al offscreen y setea `state.isPlaying = !!state.station && !!response?.playing`; en Firefox, usa `!directAudio.paused`. Si no hay offscreen document (reinicio real del browser), `isPlaying` queda en `false`, que es lo correcto.
 - El volumen y la estación seleccionada **sí** se persisten
 - **Todos** los handlers de mensajes del background (`GET_STATE`, `SET_STATION`, `PLAY`, `PAUSE`, `SET_VOLUME`) deben hacer `await readyPromise` antes de leer o mutar `state` — el `await` al inicio del IIFE async del listener `onMessage` garantiza el orden restore-antes-de-mutar de forma determinística
 - Razón: si un handler que llama `persist()` corre antes de que el restore desde `browser.storage.local` termine, `state.volume` vale el default `1` y `persist()` pisa el valor guardado → en la siguiente apertura en frío el volumen vuelve al máximo

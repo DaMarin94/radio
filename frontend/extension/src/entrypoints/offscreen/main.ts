@@ -1,4 +1,4 @@
-import type { BackgroundMessage, OffscreenMessage } from '../../lib/messages';
+import type { BackgroundMessage, OffscreenMessage, OffscreenQueryResponse } from '../../lib/messages';
 import { StreamRetry } from '@radio/shared';
 
 function isOffscreenMessage(m: unknown): m is OffscreenMessage {
@@ -36,7 +36,9 @@ audio.addEventListener('ended', scheduleRetry);
 browser.runtime.onMessage.addListener((msg) => {
   if (!isOffscreenMessage(msg)) return;
 
-  if (msg.type === 'AUDIO_PLAY') {
+  if (msg.type === 'AUDIO_QUERY') {
+    return Promise.resolve({ playing: !audio.paused } satisfies OffscreenQueryResponse);
+  } else if (msg.type === 'AUDIO_PLAY') {
     retry.reset();
     currentUrl = msg.url;
     audio.volume = msg.volume;

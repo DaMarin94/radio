@@ -1,4 +1,4 @@
-import type { BackgroundMessage, OffscreenMessage, PlayerState, PopupMessage } from '../lib/messages';
+import type { BackgroundMessage, OffscreenMessage, OffscreenQueryResponse, PlayerState, PopupMessage } from '../lib/messages';
 import { StreamRetry } from '@radio/shared';
 
 const STORAGE_KEY = 'playerState';
@@ -105,7 +105,30 @@ export default defineBackground(() => {
     if (!isBackgroundMessage(msg)) return;
 
     if (msg.type === 'GET_STATE') {
-      return readyPromise.then(() => ({ target: 'popup', type: 'STATE', state } as PopupMessage));
+      return (async () => {
+        await readyPromise;
+        // Reconcile isPlaying with the real audio source to handle the case where
+        // the Chrome MV3 service worker was killed mid-session and restarted while
+        // the offscreen document kept playing. We distinguish this from a real browser
+        // restart (where no offscreen document exists) and keep isPlaying = false there.
+        if (directAudio) {
+          // Firefox: directAudio lives in this same page — just check it directly.
+          state = { ...state, isPlaying: !!state.station && !directAudio.paused };
+        } else {
+          // Chrome: query the offscreen document, if one exists.
+          try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const hasDoc = await (chrome as any).offscreen.hasDocument();
+            if (hasDoc) {
+              const response = await browser.runtime.sendMessage({ target: 'offscreen', type: 'AUDIO_QUERY' }) as OffscreenQueryResponse | undefined;
+              state = { ...state, isPlaying: !!state.station && !!response?.playing };
+            }
+          } catch {
+            // If the query fails for any reason, leave isPlaying as-is.
+          }
+        }
+        return { target: 'popup', type: 'STATE', state } satisfies PopupMessage;
+      })();
     }
 
     // AUDIO_STATUS comes from the offscreen document (Chrome only) — no readyPromise needed

@@ -76,3 +76,30 @@ El sistema de temas usa CSS custom properties con el atributo `data-theme` en `<
 | Variable | Descripción |
 |----------|-------------|
 | `VITE_API_URL` | URL base del backend. Dev: `http://localhost:3000`. Prod: `https://radio-c868.onrender.com` |
+
+## Extensión (Chrome MV3 / Firefox MV2)
+
+### Arquitectura de audio
+
+En Chrome MV3 el background es un **service worker efímero**: Chrome puede matarlo tras inactividad aunque el offscreen document siga reproduciendo audio. En Firefox MV2 el background es una página persistente con DOM completo; el audio se maneja directamente con `new Audio()` (`directAudio`).
+
+### Reconciliación de `isPlaying` al abrir el popup
+
+Cuando el SW de Chrome se reinicia a mitad de sesión, su estado en memoria arranca con `isPlaying: false` aunque el offscreen siga sonando. Para no mostrar el botón en "pausado" con audio activo, el handler `GET_STATE` reconcilia `isPlaying` con la fuente de audio real antes de responder:
+
+- **Chrome**: si `chrome.offscreen.hasDocument()` devuelve `true`, envía `AUDIO_QUERY` al offscreen document. El offscreen responde `{ playing: !audio.paused }`. El background setea `state.isPlaying = !!state.station && !!response.playing`.
+- **Firefox**: lee `!directAudio.paused` directamente.
+- Si no hay offscreen document (reinicio real del browser, el offscreen nunca existió), `isPlaying` queda en `false` — comportamiento correcto para no auto-arrancar audio.
+
+`isPlaying` sigue sin persistirse en `browser.storage.local`; la reconciliación solo opera en el momento de responder `GET_STATE`.
+
+### Tipos de mensajes relevantes (extensión)
+
+| Mensaje | Dirección | Descripción |
+|---------|-----------|-------------|
+| `AUDIO_PLAY` | background → offscreen | Reproduce URL con volumen dado |
+| `AUDIO_PAUSE` | background → offscreen | Pausa y limpia currentUrl |
+| `AUDIO_SET_VOLUME` | background → offscreen | Ajusta volumen sin interrumpir |
+| `AUDIO_QUERY` | background → offscreen | Consulta si el audio está sonando; responde `{ playing: boolean }` |
+| `AUDIO_STATUS` | offscreen → background | Notifica cambio en buffering |
+| `STATE` | background → popup | Push de estado completo (`PlayerState`) |

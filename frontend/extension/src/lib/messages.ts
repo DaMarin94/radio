@@ -23,4 +23,8 @@ export type PopupMessage = { target: 'popup'; type: 'STATE'; state: PlayerState 
 export type OffscreenMessage =
   | { target: 'offscreen'; type: 'AUDIO_PLAY'; url: string; volume: number }
   | { target: 'offscreen'; type: 'AUDIO_PAUSE' }
-  | { target: 'offscreen'; type: 'AUDIO_SET_VOLUME'; volume: number };
+  | { target: 'offscreen'; type: 'AUDIO_SET_VOLUME'; volume: number }
+  | { target: 'offscreen'; type: 'AUDIO_QUERY' };
+
+// Response from offscreen to AUDIO_QUERY
+export type OffscreenQueryResponse = { playing: boolean };
