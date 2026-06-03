@@ -17,7 +17,7 @@ export default defineConfig({
     },
   }),
   manifest: ({ browser }) => ({
-    name: 'Radio BA',
+    name: 'Radio',
     description: 'Sintonizador de radio FM/AM',
     permissions: browser === 'chrome' ? ['storage', 'offscreen'] : ['storage'],
     icons: {
