@@ -1,0 +1,22 @@
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+/ios
+/android
+
+# Metro
+.metro-health-check*
+
+# Env (local secrets/overrides) — .env.example is committed
+.env*.local
+
+# Debug
+npm-debug.*
+*.log
+
+# macOS
+.DS_Store

@@ -1,5 +1,32 @@
 {
   "name": "@radio/mobile",
   "version": "0.1.0",
-  "private": true
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@radio/shared": "*",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "axios": "^1.7.9",
+    "expo": "~56.0.8",
+    "expo-status-bar": "~56.0.4",
+    "nativewind": "^4.2.4",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-track-player": "^4.1.2"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.3",
+    "babel-preset-expo": "~56.0.14",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.9.2"
+  }
 }

@@ -59,7 +59,7 @@ radio/
     │   ├── helpers/              ← getSavedFrequency
     │   └── themes/               ← default, digital, amber, blue, light, warm
     ├── extension/src/            ← entrypoints (background/offscreen/popup), components, hooks, lib
-    └── mobile/                   ← React Native (planeado, sin scaffold)
+    └── mobile/                   ← React Native + Expo (scaffold inicial — ver mobile.md)
 ```
 
 ## Diagrama de capas (web)

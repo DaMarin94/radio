@@ -36,4 +36,5 @@ El frontend lee la URL del backend desde `VITE_API_URL` (`frontend/web/.env`).
 | [docs/backend.md](./docs/backend.md) | Endpoints, pipelines, providers, cachés |
 | [docs/frontend.md](./docs/frontend.md) | Web y extensión: componentes, estado, helpers, temas |
 | [docs/data-model.md](./docs/data-model.md) | Tipos, transformaciones y persistencia |
+| [docs/mobile.md](./docs/mobile.md) | App mobile: stack, estructura, cómo correr y alcance del v1 |
 | [docs/development.md](./docs/development.md) | Setup local y cómo correr el proyecto |

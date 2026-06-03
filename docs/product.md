@@ -59,7 +59,7 @@ Decisiones explícitas de lo que el producto **no** hace, para no desviarse:
 |---|---|---|
 | Web | React 19 + Vite + Tailwind | En produccion |
 | Extension | WXT - Chrome MV3 + Firefox MV2 | En produccion |
-| Mobile | React Native (planeado) | Sin arrancar |
+| Mobile | React Native + Expo | Scaffold inicial (ver mobile.md) |
 
 ### 6.1 Por qué mobile
 
