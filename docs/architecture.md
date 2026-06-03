@@ -4,80 +4,80 @@
 
 | Capa | Tecnología |
 |------|-----------|
-| Frontend | React 19 + TypeScript + Vite + Tailwind CSS |
+| Frontend (web) | React 19 + TypeScript + Vite + Tailwind CSS v4 (PWA) |
+| Frontend (extensión) | WXT — Chrome MV3 + Firefox MV2 |
+| Código compartido | `@radio/shared` — tipos y helpers puros |
 | Backend | Node.js + Express 5 + TypeScript |
-| Datos externos | Radio Browser API (`de1.api.radio-browser.info`) |
-| Persistencia local | localStorage (browser) |
+| Datos de radios | Radio Browser API (`all.api.radio-browser.info`, round-robin DNS) |
+| Geocodificación inversa | Nominatim (OpenStreetMap) |
+| Reconocimiento de canción | AudD (integrado pero deshabilitado — ver backend.md) |
+| Persistencia local | localStorage (web) / browser.storage (extensión) |
+| Caché backend | En memoria, `TTLCache` (no hay base de datos) |
 | Deploy backend | Render (`radio-c868.onrender.com`) |
 
-## Diagrama de capas
+## Monorepo
 
-```
-Browser
-  └── React App (Vite)
-        ├── UI Components (Tuner, BandSwitch, AudioPlayer)
-        ├── State (React hooks + localStorage)
-        └── HTTP client (Axios → VITE_API_URL)
-              │
-              ▼
-        Express API (:3000)
-          └── GET /radios/buenos-aires
-                └── Pipeline:
-                      fetch (Radio Browser API)
-                        → filter (BA + valid stream)
-                        → map (normalize fields)
-                        → dedupe (by name)
-                        → sort (AM first, then by frequency)
-```
-
-## Estructura de archivos
+`frontend/` es un workspace de npm con cuatro paquetes; `backend/` es independiente.
 
 ```
 radio/
-├── docs/                      ← esta carpeta
+├── docs/                         ← esta carpeta
 ├── backend/
-│   ├── src/
-│   │   ├── index.ts           ← servidor Express, rutas montadas
-│   │   ├── routes/
-│   │   │   └── radioRoutes.ts ← GET /radios/buenos-aires
-│   │   ├── services/
-│   │   │   └── radioService.ts← orquesta el pipeline completo
-│   │   ├── providers/
-│   │   │   └── radioBrowser.ts← fetch a Radio Browser API
-│   │   ├── mappers/
-│   │   │   └── radioMapper.ts ← RadioBrowserStation → RadioStation
-│   │   ├── filters/
-│   │   │   └── radioFilters.ts← isBuenosAires, hasValidStream, dedupe, filterNearby
-│   │   ├── sorters/
-│   │   │   └── radioSorters.ts← AM antes que FM, luego por frecuencia numérica
-│   │   ├── models/
-│   │   │   └── radioStation.ts← tipos RadioStation y RadioBrowserStation
-│   │   └── utils/
-│   │       └── radioUtils.ts  ← extractFrequency, detectBand, getDistanceKm (Haversine)
-│   ├── package.json
-│   └── tsconfig.json
+│   └── src/
+│       ├── index.ts              ← servidor Express, monta /radios y /health
+│       ├── routes/
+│       │   └── radioRoutes.ts    ← endpoints REST
+│       ├── services/
+│       │   └── radioService.ts   ← orquesta pipelines + cachés TTL
+│       ├── providers/
+│       │   ├── radioBrowser.ts   ← fetch a Radio Browser API
+│       │   ├── nominatim.ts      ← reverse geocode (coords → ciudad/país)
+│       │   └── audd.ts           ← reconocimiento de canción (planeado)
+│       ├── mappers/
+│       │   └── radioMapper.ts    ← map + filtros de validez/BA
+│       ├── filters/
+│       │   └── radioFilters.ts   ← antena, match por ubicación, nearby
+│       ├── sorters/
+│       │   └── radioSorters.ts   ← orden AM→FM, frecuencia, votos
+│       ├── models/
+│       │   └── radioStation.ts   ← RadioStation, RadioBrowserStation, ReverseGeocodeResult
+│       └── utils/
+│           ├── radioUtils.ts     ← extractFrequency, detectBand, formatDisplayName, getDistanceKm
+│           └── cache.ts          ← TTLCache genérico con dedup de in-flight
 │
-└── web/
-    ├── src/
-    │   ├── main.tsx           ← entry point, setea data-theme="default"
-    │   ├── App.tsx            ← componente raíz, todo el estado principal
-    │   ├── components/
-    │   │   ├── TunerSlider.tsx ← slider de frecuencia (AM: 530-1700, FM: 76-108)
-    │   │   ├── BandSwitch.tsx  ← toggle AM/FM
-    │   │   └── AudioPlayer.tsx ← player con volumen, mute, play/pause
-    │   ├── helpers/
-    │   │   ├── tuning.ts       ← resolveStationByTuning, getUserLocation
-    │   │   ├── snapToStations.ts ← encuentra estación más cercana a frecuencia
-    │   │   └── getSavedFrequency.tsx ← lee localStorage o retorna defaults
-    │   ├── services/
-    │   │   └── api.ts          ← instancia Axios con VITE_API_URL
-    │   ├── types/
-    │   │   └── radioStation.ts ← RadioStation (frontend), TuningMode
-    │   ├── themes/
-    │   │   └── default.css     ← variables CSS del tema
-    │   └── index.css / App.css
-    ├── .env                    ← VITE_API_URL
-    ├── package.json
-    ├── vite.config.ts
-    └── tsconfig.json
+└── frontend/                     ← npm workspaces: shared, web, extension, mobile
+    ├── shared/src/
+    │   ├── types/                ← RadioStation, TuningMode
+    │   └── helpers/              ← tuning, location, streamRetry
+    ├── web/src/
+    │   ├── main.tsx              ← entry; carga temas y DeviceProvider
+    │   ├── App.tsx               ← raíz; compone tuner + audio + temas
+    │   ├── components/           ← TunerWheel, BandSwitch, AudioPlayer, LoadingBar, ThemePicker
+    │   ├── context/              ← DeviceContext (isMobile)
+    │   ├── hooks/                ← useTuner, useNowPlaying
+    │   ├── services/             ← api.ts (axios + caché localStorage)
+    │   ├── helpers/              ← getSavedFrequency
+    │   └── themes/               ← default, digital, amber, blue, light, warm
+    ├── extension/src/            ← entrypoints (background/offscreen/popup), components, hooks, lib
+    └── mobile/                   ← React Native (planeado, sin scaffold)
+```
+
+## Diagrama de capas (web)
+
+```
+Browser (PWA)
+  └── React App (Vite)
+        ├── UI (TunerWheel, BandSwitch, AudioPlayer, ThemePicker)
+        ├── Estado (useTuner + localStorage) — @radio/shared para lógica pura
+        └── HTTP (axios → VITE_API_URL)
+              │
+              ▼
+        Express API (:3000)  /radios/*
+          └── radioService (cachés TTL en memoria)
+                └── Pipeline buildStationList:
+                      fetch (Radio Browser API, countrycode=AR)
+                        → filter hasValidStream
+                        → map mapRadioStation (normaliza, displayName, https)
+                        → filter hasFrequency
+                        → sort (AM→FM, frecuencia, votos, clicks)
 ```

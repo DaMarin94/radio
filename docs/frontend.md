@@ -1,105 +1,102 @@
 # Frontend
 
-## Entry point
+Cubre la **web** (React 19 + Vite + Tailwind v4, PWA) y la **extensión** (WXT). Ambas consumen `@radio/shared` para la lógica pura del tuner.
 
-`main.tsx` — Setea `document.documentElement.dataset.theme = "default"` y renderiza `<App />`.
+## Web
 
-## App.tsx — Estado principal
+### Entry — `main.tsx`
 
-Todo el estado global vive en `App.tsx`:
+Importa los 6 temas, setea `data-theme` desde `localStorage["theme"]` (default `"digital"`) y renderiza `<App />` dentro de `<DeviceProvider>`.
 
-| Estado | Tipo | Descripción |
-|--------|------|-------------|
-| `radios` | `RadioStation[]` | Lista completa de estaciones cargadas |
-| `frequency` | `number` | Frecuencia actual del dial |
-| `bandFilter` | `"AM" \| "FM"` | Banda seleccionada |
-| `selectedRadio` | `RadioStation \| null` | Estación activa (reproduciéndose) |
-| `previewRadio` | `RadioStation \| null` | Estación bajo el dial (hover/drag) |
+### `App.tsx`
 
-Al montar: fetch a `/radios/buenos-aires`, guarda en `radios`. La frecuencia inicial se lee de localStorage con `getSavedFrequency`.
+Componente raíz. Compone el tuner, el audio, el display y los temas. El estado del tuner vive en el hook `useTuner`; el estado de UI (tema, buffering, error de stream, gesto requerido) vive en `App`.
 
-Al cambiar banda: restaura la frecuencia y estación guardada para esa banda desde localStorage.
+Render principal:
+- `LoadingBar` (carga de radios o buffering)
+- Overlay "toca para empezar" cuando el browser bloquea el autoplay (`needsGesture`)
+- `BandSwitch` + `AudioPlayer`
+- Display de frecuencia + banda
+- `TunerWheel` (el dial)
+- Nombre de la estación (`displayName`), banda/frecuencia y "now playing" si hay
+- `ThemePicker`
 
-Al soltar el dial (`onRelease`): llama `resolveStationByTuning` → actualiza `selectedRadio` → guarda en localStorage.
+### `useTuner` (hook)
 
-## Componentes
+Centraliza el estado del dial:
 
-### `TunerSlider.tsx`
+| Devuelve | Descripción |
+|----------|-------------|
+| `radios` (interno) | Lista completa cargada |
+| `frequency` | Frecuencia actual del dial |
+| `band` | `"AM" \| "FM"` |
+| `selectedRadio` | Estación activa |
+| `previewRadio` | Estación bajo el dial mientras se arrastra |
+| `isTuning` | `previewRadio !== null` |
+| `isLoadingRadios` | Carga inicial |
+| `handleFrequencyChange / handleFrequencyRelease / changeBand` | Acciones |
 
-Range input continuo. Rango según banda:
-- AM: 530 – 1700 kHz
-- FM: 76 – 108 MHz
+- Al montar: `getUserLocation()` → `fetchStations(loc)` → `radios`. La frecuencia inicial sale de `getSavedFrequency(band)`.
+- Mientras se arrastra: `resolveStationByTuning` actualiza `previewRadio`; hay un debounce de 300 ms que también fija `selectedRadio`.
+- Al soltar: fija `selectedRadio` y hace `POST /radios/click/:id`.
+- Al cambiar banda: mantiene la posición normalizada del dial y restaura/resuelve la estación de la otra banda.
+- Persistencia: `bandFilter`, `frequency-${band}`, `selectedRadio-${band}` (ver data-model.md).
 
-Props:
-- `value` — frecuencia actual
-- `band` — "AM" | "FM"
-- `onChange(freq)` — se dispara mientras se arrastra (preview)
-- `onRelease(freq)` — se dispara al soltar (selección real)
+### `useNowPlaying` (hook)
 
-Muestra: frecuencia mínima, frecuencia actual, frecuencia máxima.
+`useNowPlaying(station)` → título sonando. **Hoy devuelve `null`**: el polling está deshabilitado hasta completar la integración ICY + AudD (igual que el backend).
 
-### `BandSwitch.tsx`
+### Componentes
 
-Toggle estilizado AM / FM. Llama `onChange` con la nueva banda al hacer click.
+- **`TunerWheel`** — el dial en uso. Props: `band`, `value`, `onChange(freq)` (preview mientras se arrastra), `onRelease(freq)` (selección al soltar). Rangos: AM 530–1700 kHz, FM 76–108 MHz. (`TunerSlider` existe como variante de slider lineal pero no se usa en `App`.)
+- **`BandSwitch`** — toggle AM/FM (usa `@radix-ui/react-switch`).
+- **`AudioPlayer`** — `<audio>` nativo + Web Audio API para el ruido estático entre estaciones. Play/pause, mute, volumen (slider solo en desktop — se oculta en mobile vía `useDevice`). Reintenta con `StreamRetry` de `@radio/shared`. Maneja el bloqueo de autoplay (`needsGesture`). El volumen persiste en `player-volume`.
+- **`LoadingBar`** — barra superior animada durante carga/buffering.
+- **`ThemePicker`** — selector de tema con preview en hover y confirmación (persiste en `theme`).
 
-### `AudioPlayer.tsx`
+### `DeviceContext`
 
-Player de audio fijo en bottom-right. Controla:
-- Play / Pause
-- Mute
-- Volumen (slider vertical)
+`isMobile` evaluado una vez con `matchMedia("(pointer: coarse)")`. Usado para esconder el slider de volumen en mobile.
 
-El volumen persiste en localStorage. Auto-play cuando cambia `selectedRadio`.
+### `services/api.ts`
 
-## Helpers
+Instancia axios con `VITE_API_URL`. `fetchStations(params?)` cachea la lista en `localStorage["stations-cache"]` con TTL 24 h. El caché no diferencia por ubicación (lat/lng solo afectan orden/tiebreaker, no el conjunto).
 
-### `tuning.ts`
+### Temas
 
-**`resolveStationByTuning(radios, frequency, band, mode)`** — dado un array de estaciones y una frecuencia, retorna la estación con frecuencia más cercana dentro de la banda. Mode puede ser `"SNAP"` o `"CONTINUOUS"` (ambos tienen la misma implementación hoy).
+CSS custom properties con atributo `data-theme` en `<html>`. Temas: `default`, `digital` (default), `amber`, `blue`, `light`, `warm`. Agregar tema = nuevo CSS + import en `main.tsx` + opción en `ThemePicker`.
 
-**`getUserLocation()`** — wrapper de `navigator.geolocation.getCurrentPosition` como Promise. Usado para Nearby Mode.
-
-### `snapToStations.ts`
-
-**`snapToStations(stations, frequency)`** — busca la estación con menor diferencia absoluta de frecuencia. Duplica la lógica de `resolveStationByTuning`; candidato a consolidar.
-
-### `getSavedFrequency.tsx`
-
-Lee `localStorage.getItem("frequency_AM")` o `"frequency_FM"`. Si no existe retorna defaults: AM → 710, FM → 90.3.
-
-## Temas
-
-El sistema de temas usa CSS custom properties con el atributo `data-theme` en `<html>`. El tema `"default"` está en `themes/default.css`. Agregar temas nuevos = nuevo archivo CSS + nueva opción en `main.tsx`.
-
-## Variables de entorno
+### Variables de entorno
 
 | Variable | Descripción |
 |----------|-------------|
-| `VITE_API_URL` | URL base del backend. Dev: `http://localhost:3000`. Prod: `https://radio-c868.onrender.com` |
+| `VITE_API_URL` | URL base del backend. Dev `http://localhost:3000` |
 
 ## Extensión (Chrome MV3 / Firefox MV2)
 
+Comparte concepto e identidad con la web pero es una superficie reducida (popup). Solo dark/light auto (sin selector de tema). Estructura: `entrypoints/` (background, offscreen, popup), `components/`, `hooks/` (`useTuner`, `useBackgroundAudio`), `lib/` (`api`, `messages`).
+
 ### Arquitectura de audio
 
-En Chrome MV3 el background es un **service worker efímero**: Chrome puede matarlo tras inactividad aunque el offscreen document siga reproduciendo audio. En Firefox MV2 el background es una página persistente con DOM completo; el audio se maneja directamente con `new Audio()` (`directAudio`).
+En Chrome MV3 el background es un **service worker efímero**: Chrome puede matarlo tras inactividad aunque el offscreen document siga reproduciendo audio. En Firefox MV2 el background es una página persistente con DOM; el audio se maneja directo con `new Audio()` (`directAudio`).
 
 ### Reconciliación de `isPlaying` al abrir el popup
 
-Cuando el SW de Chrome se reinicia a mitad de sesión, su estado en memoria arranca con `isPlaying: false` aunque el offscreen siga sonando. Para no mostrar el botón en "pausado" con audio activo, el handler `GET_STATE` reconcilia `isPlaying` con la fuente de audio real antes de responder:
+Cuando el SW de Chrome se reinicia a mitad de sesión, arranca con `isPlaying: false` aunque el offscreen siga sonando. Para no mostrar "pausado" con audio activo, `GET_STATE` reconcilia `isPlaying` con la fuente real:
 
-- **Chrome**: si `chrome.offscreen.hasDocument()` devuelve `true`, envía `AUDIO_QUERY` al offscreen document. El offscreen responde `{ playing: !audio.paused }`. El background setea `state.isPlaying = !!state.station && !!response.playing`.
-- **Firefox**: lee `!directAudio.paused` directamente.
-- Si no hay offscreen document (reinicio real del browser, el offscreen nunca existió), `isPlaying` queda en `false` — comportamiento correcto para no auto-arrancar audio.
+- **Chrome**: si `chrome.offscreen.hasDocument()` es `true`, manda `AUDIO_QUERY` al offscreen (responde `{ playing }`) y setea `isPlaying = !!station && !!playing`.
+- **Firefox**: lee `!directAudio.paused`.
+- Sin offscreen document (reinicio real del browser), `isPlaying` queda en `false`.
 
-`isPlaying` sigue sin persistirse en `browser.storage.local`; la reconciliación solo opera en el momento de responder `GET_STATE`.
+`isPlaying` no se persiste; la reconciliación opera solo al responder `GET_STATE`.
 
-### Tipos de mensajes relevantes (extensión)
+### Tipos de mensajes
 
 | Mensaje | Dirección | Descripción |
 |---------|-----------|-------------|
 | `AUDIO_PLAY` | background → offscreen | Reproduce URL con volumen dado |
 | `AUDIO_PAUSE` | background → offscreen | Pausa y limpia currentUrl |
 | `AUDIO_SET_VOLUME` | background → offscreen | Ajusta volumen sin interrumpir |
-| `AUDIO_QUERY` | background → offscreen | Consulta si el audio está sonando; responde `{ playing: boolean }` |
-| `AUDIO_STATUS` | offscreen → background | Notifica cambio en buffering |
+| `AUDIO_QUERY` | background → offscreen | Consulta si suena; responde `{ playing }` |
+| `AUDIO_STATUS` | offscreen → background | Notifica cambio de buffering |
 | `STATE` | background → popup | Push de estado completo (`PlayerState`) |

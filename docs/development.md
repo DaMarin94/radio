@@ -12,81 +12,91 @@
 cd backend
 npm install
 
-# Frontend
-cd web
+# Frontend (workspaces: instala shared, web, extension, mobile)
+cd frontend
 npm install
 ```
 
+`@radio/shared` se resuelve por alias de Vite/TypeScript hacia `frontend/shared/src/` — no requiere build previo.
+
 ## Variables de entorno
 
-`web/.env` (ya existe, copiar de `.env.example` si no):
+`frontend/web/.env`:
 
 ```
 VITE_API_URL=http://localhost:3000
 ```
 
+Backend (`backend/.env`, opcional):
+
+```
+PORT=3000
+AUDD_API_TOKEN=...   # solo si se habilita el reconocimiento de canción
+```
+
 ## Correr en desarrollo
 
-Dos terminales simultáneas:
-
 ```bash
-# Terminal 1 — Backend
+# Terminal 1 — Backend (http://localhost:3000)
 cd backend
 npm run dev
-# Levanta en http://localhost:3000
-```
 
-```bash
-# Terminal 2 — Frontend
-cd web
+# Terminal 2 — Web (http://localhost:5173)
+cd frontend/web
 npm run dev
-# Levanta en http://localhost:5173 (por defecto Vite)
 ```
 
-## Scripts disponibles
+## Scripts
 
-### Backend
+### Backend (`backend/`)
 
 | Script | Comando | Descripción |
 |--------|---------|-------------|
 | `dev` | `ts-node-dev --respawn --transpile-only src/index.ts` | Dev con hot-reload |
 | `build` | `tsc` | Compila a `dist/` |
-| `start` | `node dist/index.js` | Corre el build compilado |
+| `start` | `node dist/index.js` | Corre el build |
 
-### Frontend
+### Web (`frontend/web/`)
 
 | Script | Comando | Descripción |
 |--------|---------|-------------|
 | `dev` | `vite` | Dev server con HMR |
-| `build` | `tsc -b && vite build` | Type-check + bundle para producción |
-| `preview` | `vite preview` | Preview del build de producción local |
+| `serve` | `vite --host` | Dev server expuesto en la red local |
+| `build` | `tsc -b && vite build` | Type-check + bundle |
+| `preview` | `vite preview` | Preview del build |
 | `lint` | `eslint .` | Lint |
+
+### Extensión (`frontend/extension/`)
+
+| Script | Descripción |
+|--------|-------------|
+| `dev` | Dev con WXT (Chrome por defecto) |
+| `build` | Build de producción |
 
 ## Endpoints del backend
 
 ```
-GET /health
-→ 200 OK
-
-GET /radios/buenos-aires
-→ RadioStation[]   (estaciones de Buenos Aires)
-
-GET /radios/nearby?lat=-34.6&lng=-58.4&radiusKm=75
-→ RadioStation[]   (toda Argentina, filtrada por proximidad a las coordenadas)
+GET  /health
+GET  /radios/buenos-aires[?lat=&lng=]
+GET  /radios/nearby?lat=&lng=&radiusKm=
+GET  /radios/by-location?lat=&lng=
+GET  /radios/nowplaying/:id?url=
+POST /radios/click/:id
 ```
+
+Detalle en `backend.md`.
 
 ## Deploy
 
 | Servicio | Plataforma | URL |
 |---------|-----------|-----|
 | Backend | Render | `https://radio-c868.onrender.com` |
-| Frontend | (configurar en `.env` antes de build) | — |
+| Web | Host estático (configurar `VITE_API_URL` antes del build) | — |
 
-Para producción: cambiar `VITE_API_URL` en `web/.env` a la URL de Render antes de `npm run build`.
+## Soporte a otra ciudad/país (estado actual)
 
-## Agregar soporte a otra ciudad o país
+El alcance hoy es Buenos Aires. La dirección a futuro (mundial) está en `product.md`. Puntos de extensión actuales:
 
-1. En `backend/src/providers/radioBrowser.ts`: cambiar el país en la URL de fetch
-2. En `backend/src/filters/radioFilters.ts`: crear un filtro análogo a `isBuenosAiresStation` para el estado/ciudad deseado
-3. En `backend/src/services/radioService.ts`: usar el nuevo filtro en el pipeline
-4. Crear un nuevo endpoint en `radioRoutes.ts` si se quiere mantener Buenos Aires en paralelo
+1. `providers/radioBrowser.ts` — `getStationsByCountry(code)` ya parametriza el país.
+2. `mappers/radioMapper.ts` — `isBuenosAiresStation` es el filtro regional a generalizar.
+3. `services/radioService.ts` — `getStationsByLocation` ya resuelve país por geocodificación inversa.
